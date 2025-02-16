@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  email       String    @unique
+  name        String?
+  createdAt   DateTime  @default(now())
+  quizzes     Quiz[]    // Quizzes created by the user
+  attempts    QuizAttempt[] // Quiz attempts by the user
+}
+
+model Quiz {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  questions   Question[]
+  attempts    QuizAttempt[]
+  author      User?     @relation(fields: [authorId], references: [id])
+  authorId    Int?
+}
+
+model Question {
+  id          Int       @id @default(autoincrement())
+  text        String
+  options     String   // Will store JSON string of options array
+  answer      String
+  orderIndex  Int       // To maintain question order
+  quiz        Quiz      @relation(fields: [quizId], references: [id])
+  quizId      Int
+  answers     Answer[]
+  attempts    QuestionAttempt[]
+}
+
+model Answer {
+  id          Int       @id @default(autoincrement())
+  text        String
+  isCorrect   Boolean
+  question    Question  @relation(fields: [questionId], references: [id])
+  questionId  Int
+  attempts    QuestionAttempt[]
+}
+
+model QuizAttempt {
+  id          Int       @id @default(autoincrement())
+  quiz        Quiz      @relation(fields: [quizId], references: [id])
+  quizId      Int
+  user        User      @relation(fields: [userId], references: [id])
+  userId      Int
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  questionAttempts QuestionAttempt[]
+}
+
+model QuestionAttempt {
+  id          Int       @id @default(autoincrement())
+  question    Question  @relation(fields: [questionId], references: [id])
+  questionId  Int
+  answer      Answer    @relation(fields: [answerId], references: [id])
+  answerId    Int
+  quizAttempt QuizAttempt @relation(fields: [quizAttemptId], references: [id])
+  quizAttemptId Int
+  createdAt   DateTime  @default(now())
+}

@@ -1,3 +1,5 @@
+"use client"
+
 import { AppSidebar } from "@/components/app-sidebar"
 import {
   Breadcrumb,
@@ -13,8 +15,39 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { usePathname } from "next/navigation"
 
 export default function Sidebar({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const pathSegments = pathname.split("/").filter(Boolean)
+  
+  const getBreadcrumbs = () => {
+    let accumulatedPath = ""
+    // Show all segments if 1 or fewer, otherwise last 2
+    const segmentsToShow = pathSegments.length <= 1 ? pathSegments : pathSegments.slice(-2)
+    
+    return segmentsToShow.map((segment, index) => {
+      accumulatedPath += `/${segment}`
+      const formattedSegment = segment
+        .split("-")
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ")
+
+      return (
+        <BreadcrumbItem key={segment} className={index === 0 ? "hidden md:block" : ""}>
+          {index === segmentsToShow.length - 1 ? (
+            <BreadcrumbPage>{formattedSegment}</BreadcrumbPage>
+          ) : (
+            <>
+              <BreadcrumbLink href={accumulatedPath}>{formattedSegment}</BreadcrumbLink>
+              <BreadcrumbSeparator />
+            </>
+          )}
+        </BreadcrumbItem>
+      )
+    })
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -25,15 +58,13 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
               <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Building Your Application
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                </BreadcrumbItem>
+                {pathSegments.length === 0 ? (
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>Home</BreadcrumbPage>
+                  </BreadcrumbItem>
+                ) : (
+                  getBreadcrumbs()
+                )}
               </BreadcrumbList>
             </Breadcrumb>
           </div>

@@ -34,7 +34,7 @@ export function NavMain({
 }) {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel className="text-black font-bold hover:text-blue-500"><a href="/dashboard">TutorPro Resources</a></SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <Collapsible
