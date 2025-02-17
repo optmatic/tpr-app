@@ -31,14 +31,13 @@ export default function QuizEditor({ quiz: initialQuiz, onSave, onBack }: QuizEd
       orderIndex: quiz.questions.length,
       quizId: quiz.id,
       type: "multiple-choice",
-      options: ["", "", "", ""],
       correctAnswer: "",
-      answers: [{
-        id: Date.now(),
-        text: "",
-        isCorrect: true,
-        questionId: Date.now()
-      }]
+      answers: [
+        { id: Date.now(), text: "", isCorrect: false, questionId: Date.now() },
+        { id: Date.now() + 1, text: "", isCorrect: false, questionId: Date.now() },
+        { id: Date.now() + 2, text: "", isCorrect: false, questionId: Date.now() },
+        { id: Date.now() + 3, text: "", isCorrect: true, questionId: Date.now() }
+      ]
     }
     setQuiz({ ...quiz, questions: [...quiz.questions, newQuestion] })
   }
@@ -54,8 +53,12 @@ export default function QuizEditor({ quiz: initialQuiz, onSave, onBack }: QuizEd
     setQuiz({ ...quiz, questions: updatedQuestions })
   }
 
-  const handleSave = () => {
-    onSave(quiz)
+  const handleSave = async () => {
+    try {
+      await onSave(quiz)
+    } catch (error) {
+      console.error('Failed to save quiz:', error)
+    }
   }
 
   return (
@@ -106,25 +109,36 @@ export default function QuizEditor({ quiz: initialQuiz, onSave, onBack }: QuizEd
               </RadioGroup>
               {question.type === "multiple-choice" && (
                 <div className="space-y-2">
-                  {question.options?.map((option, optionIndex) => (
-                    <Input
-                      key={optionIndex}
-                      value={option}
-                      onChange={(e) => {
-                        const newOptions = [...(question.options || [])]
-                        newOptions[optionIndex] = e.target.value
-                        updateQuestion(index, { ...question, options: newOptions })
-                      }}
-                      placeholder={`Option ${optionIndex + 1}`}
-                    />
+                  {question.answers.map((answer, answerIndex) => (
+                    <div key={answer.id} className="flex gap-2">
+                      <Input
+                        value={answer.text}
+                        onChange={(e) => {
+                          const newAnswers = [...question.answers]
+                          newAnswers[answerIndex] = { ...answer, text: e.target.value }
+                          updateQuestion(index, { ...question, answers: newAnswers })
+                        }}
+                        placeholder={`Option ${answerIndex + 1}`}
+                      />
+                      <RadioGroup
+                        value={answer.isCorrect ? "correct" : "incorrect"}
+                        onValueChange={(value) => {
+                          const newAnswers = question.answers.map((a, idx) => ({
+                            ...a,
+                            isCorrect: idx === answerIndex ? value === "correct" : false
+                          }))
+                          updateQuestion(index, { ...question, answers: newAnswers })
+                        }}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="correct" id={`correct-${answer.id}`} />
+                          <Label htmlFor={`correct-${answer.id}`}>Correct</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
                   ))}
                 </div>
               )}
-              <Input
-                value={question.correctAnswer}
-                onChange={(e) => updateQuestion(index, { ...question, correctAnswer: e.target.value })}
-                placeholder="Correct Answer"
-              />
             </div>
           </CardContent>
         </Card>

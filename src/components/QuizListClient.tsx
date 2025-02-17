@@ -57,21 +57,40 @@ export default function QuizListClient({ initialQuizzes }: { initialQuizzes: Qui
   }
 
   const handleSaveQuiz = async (updatedQuiz: Quiz) => {
-    const transformedQuiz: QuizWithRelations = {
-      ...selectedQuiz!,
-      title: updatedQuiz.title,
-      questions: updatedQuiz.questions.map(q => ({
-        id: q.id,
-        text: q.text,
-        options: q.options?.join(',') || '',
-        orderIndex: q.orderIndex,
-        quizId: selectedQuiz!.id,
-        answers: q.answers
-      }))
+    try {
+      const requestBody = {
+        title: updatedQuiz.title,
+        questions: {
+          deleteMany: { quizId: updatedQuiz.id },
+          create: Array.isArray(updatedQuiz.questions) ? updatedQuiz.questions.map(q => ({
+            text: q.text,
+            orderIndex: q.orderIndex,
+            type: q.type,
+            answers: {
+              create: q.answers.map(a => ({
+                text: a.text,
+                isCorrect: a.isCorrect
+              }))
+            }
+          })) : []
+        }
+      }
+
+      const response = await fetch(`/api/quizzes/${updatedQuiz.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      })
+
+      if (!response.ok) throw new Error(await response.json().then(data => data.message))
+      
+      router.refresh()
+      setView('list')
+      setSelectedQuiz(null)
+    } catch (error) {
+      console.error('Failed to save quiz:', error)
+      throw error
     }
-    // TODO: Implement save logic
-    setView('list')
-    setSelectedQuiz(null)
   }
 
   return (

@@ -9,6 +9,7 @@ type Answer = {
 type Question = {
   text: string
   orderIndex: number
+  type: 'multiple-choice'
   answers: Answer[]
 }
 
@@ -78,9 +79,17 @@ export async function POST(request: Request) {
           create: questions.map((q: Question) => ({
             text: q.text,
             orderIndex: q.orderIndex,
-            options: JSON.stringify(q.answers.map(a => a.text)),
-            answer: q.answers.findIndex(a => a.isCorrect).toString()
+            type: q.type,
+            options: q.answers.map(a => a.text).join(','),
+            answer: q.answers.find(a => a.isCorrect)?.text || ''
           }))
+        }
+      },
+      include: {
+        questions: {
+          include: {
+            answers: true
+          }
         }
       }
     })
@@ -90,6 +99,64 @@ export async function POST(request: Request) {
     console.error('API Error:', error);
     return NextResponse.json(
       { error: 'API Error: ' + (error instanceof Error ? error.message : 'Unknown error') },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const { id, title, questions } = await request.json() as {
+      id: number
+      title: string
+      questions: Question[]
+    }
+
+    // Validate input
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Quiz ID is required' },
+        { status: 400 }
+      )
+    }
+
+    if (!title.trim()) {
+      return NextResponse.json(
+        { error: 'Quiz title is required' },
+        { status: 400 }
+      )
+    }
+
+    // Update the quiz and its questions
+    const updatedQuiz = await prisma.quiz.update({
+      where: { id },
+      data: {
+        title,
+        questions: {
+          deleteMany: {},
+          create: questions.map((q) => ({
+            text: q.text,
+            orderIndex: q.orderIndex,
+            type: q.type,
+            options: q.answers.map(a => a.text).join(','),
+            answer: q.answers.find(a => a.isCorrect)?.text || ''
+          }))
+        }
+      },
+      include: {
+        questions: {
+          include: {
+            answers: true
+          }
+        }
+      }
+    })
+
+    return NextResponse.json(updatedQuiz)
+  } catch (error) {
+    console.error('Failed to update quiz:', error)
+    return NextResponse.json(
+      { error: 'Failed to update quiz' },
       { status: 500 }
     )
   }
