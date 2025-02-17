@@ -1,36 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft } from "lucide-react"
-
-export type Question = {
-  id: number
-  text: string
-  orderIndex: number
-  quizId: number
-  answers: {
-    id: number
-    text: string
-    isCorrect: boolean
-    questionId: number
-  }[]
-}
-
-export type Quiz = {
-  id: number
-  title: string
-  questions: Question[]
-  author: {
-    id: number
-    name: string | null
-    email: string
-    createdAt: Date
-  } | null
-}
-
-type QuizDisplayProps = {
-  quiz: Quiz
-  onBack: () => void
-}
+import { QuizDisplayProps } from "@/lib/types"
 
 export default function QuizDisplay({ quiz, onBack }: QuizDisplayProps) {
   return (

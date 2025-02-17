@@ -5,8 +5,8 @@ import QuizCreator from "@/components/QuizCreator"
 import QuizList from "@/components/QuizList"
 import { Button } from "@/components/ui/button"
 import QuizDisplay from "@/components/QuizDisplay"
-import type { Quiz } from "@/components/QuizDisplay"
-import type { QuizWithRelations } from "@/lib/types"
+import type { Quiz, QuizWithRelations } from "@/lib/types"
+
 
 export default function QuizListClient({ initialQuizzes }: { initialQuizzes: QuizWithRelations[] }) {
   const [showQuizCreator, setShowQuizCreator] = useState(false)
@@ -48,7 +48,12 @@ export default function QuizListClient({ initialQuizzes }: { initialQuizzes: Qui
           text: q.question,
           orderIndex: 0,
           quizId: Number(quiz.id),
-          answers: q.options
+          answers: q.options.map(a => ({
+            id: Number(a.id),
+            text: a.text,
+            isCorrect: a.isCorrect,
+            questionId: Number(q.id)
+          }))
         }))
       })
     }
