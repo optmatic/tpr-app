@@ -12,34 +12,45 @@ export default function QuizListClient({ initialQuizzes }: { initialQuizzes: Qui
   const [showQuizCreator, setShowQuizCreator] = useState(false)
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null)
   
-  const transformedQuizzes = initialQuizzes.map(quiz => ({
-    id: String(quiz.id),
-    title: quiz.title,
-    author: typeof quiz.author === 'object' ? 
-      (quiz.author?.name ?? "Unknown") : 
-      (quiz.author ?? "Unknown"),
-    questions: quiz.questions.map(q => ({
-      id: String(q.id),
-      type: "multiple-choice" as const,
-      question: q.text,
-      text: q.text,
-      orderIndex: q.orderIndex,
-      quizId: String(q.quizId),
-      answers: q.answers.map(a => ({
-        id: String(a.id),
-        text: a.text,
-        isCorrect: a.isCorrect,
-        questionId: String(q.id)
-      }))
-    }))
-  }))
+  const transformedQuizzes = initialQuizzes.map(quiz => {
+    console.log("Initial quiz:", quiz);
+    return ({
+      id: String(quiz.id),
+      title: quiz.title,
+      author: quiz.author,
+      questions: quiz.questions.map(q => {
+        console.log("Question with answers:", q);
+        return ({
+          id: String(q.id),
+          type: "multiple-choice" as const,
+          question: q.text,
+          options: q.answers.map(a => ({
+            id: String(a.id),
+            text: a.text,
+            isCorrect: a.isCorrect
+          }))
+        })
+      })
+    })
+  })
+  console.log("Transformed quizzes:", transformedQuizzes);
   
   const [quizzes] = useState(transformedQuizzes)
-
   const handleQuizSelect = (quizId: string) => {
     const quiz = quizzes.find(q => q.id === quizId)
     if (quiz) {
-      setSelectedQuiz(quiz)
+      setSelectedQuiz({
+        id: Number(quiz.id),
+        title: quiz.title,
+        author: quiz.author,
+        questions: quiz.questions.map(q => ({
+          id: Number(q.id),
+          text: q.question,
+          orderIndex: 0,
+          quizId: Number(quiz.id),
+          answers: q.options
+        }))
+      })
     }
   }
 
@@ -60,7 +71,10 @@ export default function QuizListClient({ initialQuizzes }: { initialQuizzes: Qui
         />
       ) : (
         <QuizList 
-          quizzes={quizzes}
+          quizzes={(() => {
+            console.log("Quizzes being passed to QuizList:", quizzes);
+            return quizzes;
+          })()}
           onQuizSelect={handleQuizSelect}
           isLoading={false} 
         />
