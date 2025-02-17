@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma"
 import QuizListClient from "@/components/QuizListClient"
 import type { QuizWithRelations } from "@/lib/types"
 
-export default async function QuizListPage() {
+export default async function QuizEditorPage() {
   const quizzes = await prisma.quiz.findMany({
     include: {
       author: true,
@@ -10,9 +10,9 @@ export default async function QuizListPage() {
         select: {
           id: true,
           text: true,
+          options: true,
           quizId: true,
           orderIndex: true,
-          options: true,
           answers: true,
         }
       }

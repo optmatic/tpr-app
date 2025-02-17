@@ -6,57 +6,60 @@ import QuizList from "@/components/QuizList"
 import { Button } from "@/components/ui/button"
 import QuizDisplay from "@/components/QuizDisplay"
 import type { Quiz, QuizWithRelations } from "@/lib/types"
+import { useRouter } from "next/navigation"
+import QuizEditor from "@/components/QuizEditor"
 
+// Updated transform function to match types
+function transformToUIQuiz(quiz: QuizWithRelations): Quiz {
+  return {
+    id: quiz.id,
+    title: quiz.title,
+    questions: quiz.questions.map(q => ({
+      id: q.id,
+      text: q.text,
+      orderIndex: q.orderIndex,
+      quizId: q.quizId,
+      answers: q.answers.map(a => ({
+        id: a.id,
+        text: a.text,
+        isCorrect: a.isCorrect,
+        questionId: a.questionId
+      }))
+    })),
+    author: quiz.author
+  }
+}
 
 export default function QuizListClient({ initialQuizzes }: { initialQuizzes: QuizWithRelations[] }) {
+  const router = useRouter()
   const [showQuizCreator, setShowQuizCreator] = useState(false)
-  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null)
+  const [selectedQuiz, setSelectedQuiz] = useState<QuizWithRelations | null>(null)
+  const [view, setView] = useState<'list' | 'edit' | 'display'>('list')
   
-  const transformedQuizzes = initialQuizzes.map(quiz => {
-    console.log("Initial quiz:", quiz);
-    return ({
-      id: String(quiz.id),
-      title: quiz.title,
-      author: quiz.author,
-      questions: quiz.questions.map(q => {
-        console.log("Question with answers:", q);
-        return ({
-          id: String(q.id),
-          type: "multiple-choice" as const,
-          question: q.text,
-          options: q.answers.map(a => ({
-            id: String(a.id),
-            text: a.text,
-            isCorrect: a.isCorrect
-          }))
-        })
-      })
-    })
-  })
-  console.log("Transformed quizzes:", transformedQuizzes);
-  
+  const transformedQuizzes = initialQuizzes.map(transformToUIQuiz)
   const [quizzes] = useState(transformedQuizzes)
-  const handleQuizSelect = (quizId: string) => {
-    const quiz = quizzes.find(q => q.id === quizId)
-    if (quiz) {
-      setSelectedQuiz({
-        id: Number(quiz.id),
-        title: quiz.title,
-        author: quiz.author,
-        questions: quiz.questions.map(q => ({
-          id: Number(q.id),
-          text: q.question,
-          orderIndex: 0,
-          quizId: Number(quiz.id),
-          answers: q.options.map(a => ({
-            id: Number(a.id),
-            text: a.text,
-            isCorrect: a.isCorrect,
-            questionId: Number(q.id)
-          }))
-        }))
-      })
+
+  const handleQuizSelect = (quizId: number) => {
+    const originalQuiz = initialQuizzes.find(q => q.id === quizId)
+    if (originalQuiz) {
+      setSelectedQuiz(originalQuiz)
     }
+  }
+
+  const handleSaveQuiz = async (updatedQuiz: Quiz) => {
+    // Transform the updated quiz back to match QuizWithRelations type
+    const transformedQuiz: QuizWithRelations = {
+      ...selectedQuiz!,
+      title: updatedQuiz.title,
+      questions: updatedQuiz.questions.map(q => ({
+        ...q,
+        quizId: selectedQuiz!.id,
+        answers: q.answers
+      }))
+    }
+    // TODO: Implement save logic
+    setView('list')
+    setSelectedQuiz(null)
   }
 
   return (
@@ -69,19 +72,32 @@ export default function QuizListClient({ initialQuizzes }: { initialQuizzes: Qui
           </Button>
           <QuizCreator />
         </>
+      ) : view === 'edit' && selectedQuiz ? (
+        <QuizEditor 
+          quiz={transformToUIQuiz(selectedQuiz)}
+          onSave={(updatedQuiz) => {
+            handleSaveQuiz(updatedQuiz)
+          }}
+          onBack={() => setView("list")} 
+        />
       ) : selectedQuiz ? (
         <QuizDisplay 
-          quiz={selectedQuiz} 
+          quiz={transformToUIQuiz(selectedQuiz)} 
           onBack={() => setSelectedQuiz(null)} 
         />
       ) : (
         <QuizList 
-          quizzes={(() => {
-            console.log("Quizzes being passed to QuizList:", quizzes);
-            return quizzes;
-          })()}
+          quizzes={quizzes}
           onQuizSelect={handleQuizSelect}
           isLoading={false} 
+          onArchiveQuiz={() => Promise.resolve()}
+          onEditQuiz={(id: number) => {
+            const quiz = initialQuizzes.find(q => q.id === id)
+            if (quiz) {
+              setSelectedQuiz(quiz)
+              setView('edit')
+            }
+          }}
         />
       )}
     </main>

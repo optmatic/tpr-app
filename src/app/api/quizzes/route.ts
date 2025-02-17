@@ -78,12 +78,8 @@ export async function POST(request: Request) {
           create: questions.map((q: Question) => ({
             text: q.text,
             orderIndex: q.orderIndex,
-            answers: {
-              create: q.answers.map((a: Answer) => ({
-                text: a.text,
-                isCorrect: a.isCorrect
-              }))
-            }
+            options: JSON.stringify(q.answers.map(a => a.text)),
+            answer: q.answers.findIndex(a => a.isCorrect).toString()
           }))
         }
       }

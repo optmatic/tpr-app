@@ -1,16 +1,16 @@
-import { Prisma } from '@prisma/client'
+import { Answer, Prisma } from '@prisma/client'
+
+
 
 export type Question = {
   id: number
   text: string
   orderIndex: number
   quizId: number
-  answers: {
-    id: number
-    text: string
-    isCorrect: boolean
-    questionId: number
-  }[]
+  type: "multiple-choice" | "short-answer"
+  options?: string[]
+  correctAnswer: string
+  answers: Answer[]
 }
 
 export type Quiz = {

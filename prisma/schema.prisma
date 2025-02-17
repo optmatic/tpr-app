@@ -31,11 +31,11 @@ model Quiz {
 model Question {
   id          Int       @id @default(autoincrement())
   text        String
-  options     String   // Will store JSON string of options array
-  answer      String
-  orderIndex  Int       // To maintain question order
+  orderIndex  Int
+  options     String    // Changed from String[] to String - store as JSON string
+  answer      String    // Index of the correct answer
   quiz        Quiz      @relation(fields: [quizId], references: [id])
-  quizId      Int
+  quizId      Int       // Changed from String to Int to match Quiz.id type
   answers     Answer[]
   attempts    QuestionAttempt[]
 }

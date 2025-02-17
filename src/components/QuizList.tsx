@@ -16,21 +16,26 @@ type QuizListProps = {
   quizzes: Quiz[]
   onQuizSelect: (quizId: string) => void
   isLoading: boolean
+  onArchiveQuiz: (quizId: string) => Promise<void>
+  onEditQuiz: (quizId: string) => void
 }
 
-export default function QuizList({ quizzes, onQuizSelect, isLoading }: QuizListProps) {
+export default function QuizList({ quizzes, onQuizSelect, isLoading, onArchiveQuiz, onEditQuiz }: QuizListProps) {
   const [searchTerm, setSearchTerm] = useState("")
 
   const filteredQuizzes = quizzes.filter((quiz) => quiz.title.toLowerCase().includes(searchTerm.toLowerCase()))
 
-  const handleDelete = (id: string) => {
-    // This would typically call an API to delete the quiz
-    console.log(`Delete quiz with id: ${id}`)
+  const handleDelete = async (id: string) => {
+    try {
+      await onArchiveQuiz(id)
+    } catch (error) {
+      console.error('Failed to archive quiz:', error)
+      // You might want to add toast notification here
+    }
   }
 
   const handleEdit = (id: string) => {
-    // This would typically navigate to the edit page or open an edit modal
-    console.log(`Edit quiz with id: ${id}`)
+    onEditQuiz(id)
   }
 
   return (
