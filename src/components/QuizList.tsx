@@ -5,20 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Edit, Trash2, Search } from "lucide-react"
-
-type Quiz = {
-  id: string
-  title: string
-  questions: Array<{ id: string; type: "multiple-choice" | "short-answer"; question: string }>
-}
-
-type QuizListProps = {
-  quizzes: Quiz[]
-  onQuizSelect: (quizId: string) => void
-  isLoading: boolean
-  onArchiveQuiz: (quizId: string) => Promise<void>
-  onEditQuiz: (quizId: string) => void
-}
+import { QuizListProps } from "@/lib/types"
 
 export default function QuizList({ quizzes, onQuizSelect, isLoading, onArchiveQuiz, onEditQuiz }: QuizListProps) {
   const [searchTerm, setSearchTerm] = useState("")
@@ -63,8 +50,8 @@ export default function QuizList({ quizzes, onQuizSelect, isLoading, onArchiveQu
           </TableHeader>
           <TableBody>
             {filteredQuizzes.map((quiz) => (
-              <TableRow key={quiz.id} className="cursor-pointer hover:bg-gray-100" onClick={() => onQuizSelect(quiz.id)}>
-                <TableCell className="font-medium">{quiz.title}</TableCell>
+              <TableRow key={quiz.id} className="hover:bg-transparent">
+                <TableCell className="font-medium"><a onClick={() => onQuizSelect(quiz.id)} className="hover:text-blue-500 hover:cursor-pointer">{quiz.title}</a></TableCell>
                 <TableCell>{quiz.questions.length}</TableCell>
                 <TableCell>
                   <div className="flex space-x-2">

@@ -1,7 +1,5 @@
 import { Answer, Prisma } from '@prisma/client'
 
-
-
 export type Question = {
   id: number
   text: string
@@ -30,18 +28,43 @@ export type QuizDisplayProps = {
   onBack: () => void
 }
 
-export type QuizWithRelations = Prisma.QuizGetPayload<{
-  include: {
-    author: true
-    questions: {
-      select: {
-        id: true
-        text: true
-        options: true
-        answers: true
-        orderIndex: true
-        quizId: true
-      }
-    }
-  }
-}>
+export type QuizWithRelations = {
+  id: number
+  title: string
+  questions: {
+    id: number
+    quizId: number
+    text: string
+    orderIndex: number
+    answers: {
+      id: number
+      text: string
+      isCorrect: boolean
+      questionId: number
+    }[]
+  }[]
+  author: {
+    id: number
+    name: string | null
+    email: string
+    createdAt: Date
+  } | null
+}
+
+export type QuizListItem = {
+  id: string
+  title: string
+  questions: Array<{
+    id: string
+    type: "multiple-choice" | "short-answer"
+    question: string
+  }>
+}
+
+export type QuizListProps = {
+  quizzes: QuizListItem[]
+  onQuizSelect: (quizId: string) => void
+  isLoading: boolean
+  onArchiveQuiz: (quizId: string) => Promise<void>
+  onEditQuiz: (quizId: string) => void
+}

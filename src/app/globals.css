@@ -6,6 +6,18 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+h1 {
+  @apply text-3xl font-serif font-light text-black mb-6;
+}
+
+main {
+  @apply container mx-auto p-2;
+}
+
+a {
+  @apply  hover:text-blue-600;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

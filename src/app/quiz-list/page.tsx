@@ -12,7 +12,6 @@ export default async function QuizListPage() {
           text: true,
           quizId: true,
           orderIndex: true,
-          options: true,
           answers: true,
         }
       }

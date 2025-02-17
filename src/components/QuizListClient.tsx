@@ -17,8 +17,10 @@ function transformToUIQuiz(quiz: QuizWithRelations): Quiz {
     questions: quiz.questions.map(q => ({
       id: q.id,
       text: q.text,
+      type: 'multiple-choice',
       orderIndex: q.orderIndex,
       quizId: q.quizId,
+      correctAnswer: q.answers.find(a => a.isCorrect)?.text || '',
       answers: q.answers.map(a => ({
         id: a.id,
         text: a.text,
@@ -37,22 +39,32 @@ export default function QuizListClient({ initialQuizzes }: { initialQuizzes: Qui
   const [view, setView] = useState<'list' | 'edit' | 'display'>('list')
   
   const transformedQuizzes = initialQuizzes.map(transformToUIQuiz)
-  const [quizzes] = useState(transformedQuizzes)
+  const [quizzes] = useState(transformedQuizzes.map(quiz => ({
+    id: String(quiz.id),
+    title: quiz.title,
+    questions: quiz.questions.map(q => ({
+      id: String(q.id),
+      type: q.type,
+      question: q.text
+    }))
+  })))
 
-  const handleQuizSelect = (quizId: number) => {
-    const originalQuiz = initialQuizzes.find(q => q.id === quizId)
+  const handleQuizSelect = (quizId: string) => {
+    const originalQuiz = initialQuizzes.find(q => q.id === Number(quizId))
     if (originalQuiz) {
       setSelectedQuiz(originalQuiz)
     }
   }
 
   const handleSaveQuiz = async (updatedQuiz: Quiz) => {
-    // Transform the updated quiz back to match QuizWithRelations type
     const transformedQuiz: QuizWithRelations = {
       ...selectedQuiz!,
       title: updatedQuiz.title,
       questions: updatedQuiz.questions.map(q => ({
-        ...q,
+        id: q.id,
+        text: q.text,
+        options: q.options?.join(',') || '',
+        orderIndex: q.orderIndex,
         quizId: selectedQuiz!.id,
         answers: q.answers
       }))
@@ -64,7 +76,7 @@ export default function QuizListClient({ initialQuizzes }: { initialQuizzes: Qui
 
   return (
     <main className="container mx-auto p-4">
-      <h1 className="text-3xl font-serif font-bold mb-6">Quiz List</h1>
+      <h1>Quiz List</h1>
       {showQuizCreator ? (
         <>
           <Button onClick={() => setShowQuizCreator(false)} className="mb-4">
@@ -91,8 +103,8 @@ export default function QuizListClient({ initialQuizzes }: { initialQuizzes: Qui
           onQuizSelect={handleQuizSelect}
           isLoading={false} 
           onArchiveQuiz={() => Promise.resolve()}
-          onEditQuiz={(id: number) => {
-            const quiz = initialQuizzes.find(q => q.id === id)
+          onEditQuiz={(id: string) => {
+            const quiz = initialQuizzes.find(q => q.id === Number(id))
             if (quiz) {
               setSelectedQuiz(quiz)
               setView('edit')
