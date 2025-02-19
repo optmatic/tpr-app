@@ -17,22 +17,39 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { title, questions } = await request.json()
+    const body = await request.json()
     const id = parseInt(params.id)
 
+    // First, delete all existing answers for this quiz's questions
+    await prisma.answer.deleteMany({
+      where: {
+        question: {
+          quizId: id
+        }
+      }
+    })
+
+    // Then delete all existing questions
+    await prisma.question.deleteMany({
+      where: {
+        quizId: id
+      }
+    })
+
+    // Finally, update the quiz with new questions and answers
     const updatedQuiz = await prisma.quiz.update({
       where: { id },
       data: {
-        title,
+        title: body.title,
         questions: {
-          deleteMany: {
-            quizId: id
-          },
-          create: questions.map((q: any) => ({
+          create: body.questions.create.map((q: Question) => ({
             text: q.text,
             orderIndex: q.orderIndex,
             answers: {
-              create: q.answers.create
+              create: q.answers.create.map((a: Answer) => ({
+                text: a.text,
+                isCorrect: a.isCorrect
+              }))
             }
           }))
         }

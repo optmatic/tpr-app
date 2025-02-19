@@ -58,11 +58,14 @@ export default function QuizListClient({ initialQuizzes }: { initialQuizzes: Qui
 
   const handleSaveQuiz = async (updatedQuiz: Quiz) => {
     try {
+      console.log('Updated Quiz:', updatedQuiz)
+      console.log('Questions:', updatedQuiz.questions)
+
       const requestBody = {
         title: updatedQuiz.title,
         questions: {
           deleteMany: { quizId: updatedQuiz.id },
-          create: Array.isArray(updatedQuiz.questions) ? updatedQuiz.questions.map(q => ({
+          create: updatedQuiz.questions.map(q => ({
             text: q.text,
             orderIndex: q.orderIndex,
             type: q.type,
@@ -72,9 +75,11 @@ export default function QuizListClient({ initialQuizzes }: { initialQuizzes: Qui
                 isCorrect: a.isCorrect
               }))
             }
-          })) : []
+          }))
         }
       }
+
+      console.log('Request Body:', JSON.stringify(requestBody, null, 2))
 
       const response = await fetch(`/api/quizzes/${updatedQuiz.id}`, {
         method: 'PUT',
@@ -82,14 +87,20 @@ export default function QuizListClient({ initialQuizzes }: { initialQuizzes: Qui
         body: JSON.stringify(requestBody),
       })
 
-      if (!response.ok) throw new Error(await response.json().then(data => data.message))
+      const responseData = await response.json()
+      console.log('Response data:', responseData)
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${responseData.message || 'Unknown error'}`);
+      }
       
       router.refresh()
       setView('list')
       setSelectedQuiz(null)
     } catch (error) {
       console.error('Failed to save quiz:', error)
-      throw error
+      // Don't rethrow the error - handle it gracefully
+      // You might want to show an error message to the user here
     }
   }
 
