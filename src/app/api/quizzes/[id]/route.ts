@@ -1,16 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { NextResponse } from 'next/server'
-
-interface Answer {
-  text: string
-  isCorrect: boolean
-}
-
-interface Question {
-  text: string
-  orderIndex: number
-  answers: Answer[]
-}
+import { Answer, Question } from '@/lib/types'
 
 export async function PUT(
   request: Request,

@@ -1,6 +1,7 @@
 "use client"
 
 import { ChevronRight, type LucideIcon } from "lucide-react"
+import Logo from "/public/tutorpro-logo.svg"
 
 import {
   Collapsible,
@@ -34,7 +35,7 @@ export function NavMain({
 }) {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel className="text-black font-bold"><a href="/dashboard">TutorPro Resources</a></SidebarGroupLabel>
+      <SidebarGroupLabel className="text-black font-bold"><div className="flex items-center my-[10px]"><a href="/dashboard"><img src={Logo.src} alt="TutorPro Logo" className="w-[150px] h-[50px]" /></a></div></SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <Collapsible

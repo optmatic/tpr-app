@@ -64,32 +64,65 @@ export default function QuizCreator() {
         return;
       }
 
-      if (questions.length === 0) {
-        alert('Please add at least one question');
+      // Debug logs
+      console.log('Original questions:', questions);
+
+      // Validate questions more thoroughly
+      const validQuestions = questions.filter(q => {
+        const hasValidText = q.text.trim().length > 0;
+        const hasValidAnswer = q.answers.some(a => a.text.trim() && a.isCorrect);
+        
+        console.log('Question validation:', {
+          text: q.text,
+          hasValidText,
+          hasValidAnswer,
+          answers: q.answers
+        });
+        
+        return hasValidText && hasValidAnswer;
+      });
+
+      console.log('Valid questions:', validQuestions);
+
+      if (validQuestions.length === 0) {
+        alert('Please ensure each question has text and at least one correct answer marked');
         return;
       }
 
-      const response = await fetch('/api/quizzes', {  // Updated API route
+      const requestBody = {
+        title: quizTitle,
+        questions: validQuestions.map(q => ({
+          text: q.text.trim(),
+          orderIndex: q.orderIndex,
+          type: 'multiple-choice',
+          answers: q.answers
+            .filter(a => a.text.trim())
+            .map(a => ({
+              text: a.text.trim(),
+              isCorrect: a.isCorrect
+            }))
+        }))
+      };
+      
+      // Log the stringified version to see exact structure
+      console.log('Request body (stringified):', JSON.stringify(requestBody, null, 2));
+
+      const response = await fetch('/api/quizzes', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          title: quizTitle,
-          questions: questions.map(q => ({
-            text: q.text,
-            orderIndex: q.orderIndex,
-            answers: q.answers.filter(a => a.text.trim() !== '')
-          }))
-        })
+        body: JSON.stringify(requestBody)
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to save quiz');
-      }
-
+      console.log('Response status:', response.status);
+      
       const data = await response.json();
+      console.log('Response data:', data);
+      
+      if (!response.ok) {
+        throw new Error(data?.error || data?.message || JSON.stringify(data) || 'Failed to save quiz');
+      }
 
       // Clear form after successful save
       setQuizTitle("");
@@ -188,4 +221,3 @@ export default function QuizCreator() {
     </div>
   )
 }
-

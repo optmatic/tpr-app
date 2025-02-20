@@ -1,7 +1,10 @@
-import { Answer, Prisma } from '@prisma/client'
+export type Answer = {
+  text: string
+  isCorrect: boolean
+}
 
 export type Question = {
-  id: number
+  id: number | string
   text: string
   orderIndex: number
   quizId: number
