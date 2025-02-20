@@ -45,7 +45,7 @@ export default function QuizList({ quizzes, onQuizSelect, isLoading, onArchiveQu
             <TableRow>
               <TableHead>Title</TableHead>
               <TableHead>Questions</TableHead>
-              <TableHead>Actions</TableHead>
+              {/* <TableHead>Actions</TableHead> */}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -53,7 +53,7 @@ export default function QuizList({ quizzes, onQuizSelect, isLoading, onArchiveQu
               <TableRow key={quiz.id} className="hover:bg-transparent">
                 <TableCell className="font-medium"><a onClick={() => onQuizSelect(quiz.id)} className="hover:text-blue-500 hover:cursor-pointer">{quiz.title}</a></TableCell>
                 <TableCell>{quiz.questions.length}</TableCell>
-                <TableCell>
+                {/* <TableCell>
                   <div className="flex space-x-2">
                     <Button
                       variant="ghost"
@@ -76,7 +76,7 @@ export default function QuizList({ quizzes, onQuizSelect, isLoading, onArchiveQu
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                </TableCell>
+                </TableCell> */}
               </TableRow>
             ))}
           </TableBody>

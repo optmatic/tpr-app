@@ -13,10 +13,14 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
+  Blocks
 } from "lucide-react"
 
+import Logo from "/public/tutorpro-logo.svg"
+
+
 import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
+import { SimpleNav } from "@/components/simple-nav"
 import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
 import {
@@ -69,6 +73,7 @@ const data = {
         {
           title: "Quiz Creator",
           url: "/quiz-creator",
+          icon: Blocks,
         },
         {
           title: "Quiz List",
@@ -81,23 +86,23 @@ const data = {
       ],
     },
   ],
-  // projects: [
-  //   {
-  //     name: "Design Engineering",
-  //     url: "#",
-  //     icon: Frame,
-  //   },
-  //   {
-  //     name: "Sales & Marketing",
-  //     url: "#",
-  //     icon: PieChart,
-  //   },
-  //   {
-  //     name: "Travel",
-  //     url: "#",
-  //     icon: Map,
-  //   },
-  // ],
+  simpleNav: [
+    {
+      name: "Quiz Creator",
+      url: "/quiz-creator",
+      icon: Blocks,
+    },
+    {
+      name: "Quiz List",
+      url: "/quiz-list",
+      icon: PieChart,
+    },
+    {
+      name: "Student Results",
+      url: "/student-results",
+      icon: Map,
+    },
+  ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -107,8 +112,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader> */}
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        {/* <NavProjects projects={data.projects} /> */}
+        {/* <NavMain items={data.navMain} /> */}
+        <div className="p-4">
+          <img src={Logo.src} alt="TutorPro Logo" className="w-[180px] h-[80px]" />
+        </div>
+        <SimpleNav simpleNav={data.simpleNav} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

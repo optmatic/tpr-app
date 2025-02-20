@@ -94,7 +94,7 @@ export default function QuizListClient({ initialQuizzes }: { initialQuizzes: Qui
   }
 
   return (
-    <main className="container mx-auto p-4">
+    <main className="mx-auto p-4">
       <h1>Quiz List</h1>
       {showQuizCreator ? (
         <>
