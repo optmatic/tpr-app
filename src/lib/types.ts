@@ -26,10 +26,6 @@ export type Quiz = {
   } | null
 }
 
-export type QuizDisplayProps = {
-  quiz: Quiz
-  onBack: () => void
-}
 
 export type QuizWithRelations = {
   id: number
@@ -69,5 +65,11 @@ export type QuizListProps = {
   onQuizSelect: (quizId: string) => void
   isLoading: boolean
   onArchiveQuiz: (quizId: string) => Promise<void>
+  onEditQuiz: (quizId: string) => void
+}
+
+export type QuizDisplayProps = {
+  quiz: Quiz
+  onBack: () => void
   onEditQuiz: (quizId: string) => void
 }

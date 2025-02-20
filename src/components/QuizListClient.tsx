@@ -113,6 +113,13 @@ export default function QuizListClient({ initialQuizzes }: { initialQuizzes: Qui
         />
       ) : selectedQuiz ? (
         <QuizDisplay 
+          onEditQuiz={(id: string) => {
+            const quiz = initialQuizzes.find(q => q.id === Number(id))
+            if (quiz) {
+              setSelectedQuiz(quiz)
+              setView('edit')
+            }
+          }}
           quiz={transformToUIQuiz(selectedQuiz)} 
           onBack={() => setSelectedQuiz(null)} 
         />
