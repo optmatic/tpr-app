@@ -6,12 +6,15 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+header {
+  @apply mb-6 border-b border-gray-100 pb-2;
+}
 h1 {
   @apply text-3xl font-serif font-light text-black mb-6;
 }
 
 main {
-  @apply mx-auto py-6;
+  @apply mx-auto p-6;
 }
 
 a {

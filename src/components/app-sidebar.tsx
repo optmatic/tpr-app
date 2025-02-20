@@ -13,7 +13,10 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
-  Blocks
+  Blocks,
+  ListCheck,
+  Notebook,
+  NotebookPen
 } from "lucide-react"
 
 import Logo from "/public/tutorpro-logo.svg"
@@ -64,28 +67,29 @@ const data = {
   
   //   },
 
-  navMain: [
-    {
-      title: "Assessment",
-      url: "/assessment",
-      icon: Bot,
-      items: [
-        {
-          title: "Quiz Creator",
-          url: "/quiz-creator",
-          icon: Blocks,
-        },
-        {
-          title: "Quiz List",
-          url: "/quiz-list",
-        },
-        {
-          title: "Student Results",
-          url: "/student-results",
-        },
-      ],
-    },
-  ],
+  // navMain: [
+  //   {
+  //     title: "Assessment",
+  //     url: "/assessment",
+  //     icon: Bot,
+  //     items: [
+  //       {
+  //         title: "Quiz Creator",
+  //         url: "/quiz-creator",
+  //         icon: Blocks,
+  //       },
+  //       {
+  //         title: "Quiz List",
+  //         url: "/quiz-list",
+          
+  //       },
+  //       {
+  //         title: "Student Results",
+  //         url: "/student-results",
+  //       },
+  //     ],
+  //   },
+  // ],
   simpleNav: [
     {
       name: "Quiz Creator",
@@ -95,12 +99,12 @@ const data = {
     {
       name: "Quiz List",
       url: "/quiz-list",
-      icon: PieChart,
+      icon: ListCheck,
     },
     {
       name: "Student Results",
       url: "/student-results",
-      icon: Map,
+      icon: NotebookPen,
     },
   ],
 }
@@ -114,7 +118,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         {/* <NavMain items={data.navMain} /> */}
         <div className="p-4">
-          <img src={Logo.src} alt="TutorPro Logo" className="w-[180px] h-[80px]" />
+          <a href="/dashboard">
+            <img src={Logo.src} alt="TutorPro Logo" className="w-[180px] h-[80px]" />
+          </a>
         </div>
         <SimpleNav simpleNav={data.simpleNav} />
       </SidebarContent>
