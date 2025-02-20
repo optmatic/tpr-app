@@ -38,17 +38,26 @@ export default function QuizDisplay({ quiz, onBack, onEditQuiz }: QuizDisplayPro
           <CardContent>
             <p className="mb-4 font-medium">{question.text}</p>
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Options:</p>
-              <ul className="list-disc list-inside">
-                {question.answers.map((answer) => (
-                  <li
-                    key={answer.id}
-                    className={answer.isCorrect ? "text-green-600 font-medium" : ""}
-                  >
-                    {answer.text} {answer.isCorrect && "(Correct Answer)"}
-                  </li>
-                ))}
-              </ul>
+              {question.type === "multiple-choice" ? (
+                <>
+                  <p className="text-sm text-muted-foreground">Options:</p>
+                  <ul className="list-disc list-inside">
+                    {question.answers.map((answer) => (
+                      <li
+                        key={answer.id}
+                        className={answer.isCorrect ? "text-green-600 font-medium" : ""}
+                      >
+                        {answer.text} {answer.isCorrect && "(Correct Answer)"}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">Answer:</p>
+                  <p className="text-green-600 font-medium">{question.correctAnswer}</p>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>

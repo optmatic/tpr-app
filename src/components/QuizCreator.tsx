@@ -10,6 +10,7 @@ import { Plus, Trash2 } from "lucide-react"
 type Question = {
   text: string
   orderIndex: number
+  type: 'multiple-choice' | 'short-answer'
   answers: {
     text: string
     isCorrect: boolean
@@ -22,17 +23,21 @@ export default function QuizCreator() {
   const [currentQuestion, setCurrentQuestion] = useState<Question>({
     text: "",
     orderIndex: 0,
+    type: 'multiple-choice',
     answers: Array(4).fill({ text: "", isCorrect: false })
   })
 
   const addQuestion = () => {
-    if (currentQuestion.text && currentQuestion.answers.some(a => a.text && a.isCorrect)) {
+    if (currentQuestion.text && 
+        ((currentQuestion.type === 'multiple-choice' && currentQuestion.answers.some(a => a.text && a.isCorrect)) ||
+         (currentQuestion.type === 'short-answer' && currentQuestion.answers[0]?.text))) {
       setQuestions([...questions, {
         ...currentQuestion,
         orderIndex: questions.length
       }])
       setCurrentQuestion({
         text: "",
+        type: 'multiple-choice',
         orderIndex: questions.length + 1,
         answers: Array(4).fill({ text: "", isCorrect: false })
       })
@@ -103,7 +108,6 @@ export default function QuizCreator() {
             }))
         }))
       };
-      
       // Log the stringified version to see exact structure
       console.log('Request body (stringified):', JSON.stringify(requestBody, null, 2));
 
@@ -129,6 +133,7 @@ export default function QuizCreator() {
       setQuestions([]);
       setCurrentQuestion({
         text: "",
+        type: 'multiple-choice',
         orderIndex: 0,
         answers: Array(4).fill({ text: "", isCorrect: false })
       });
@@ -155,6 +160,33 @@ export default function QuizCreator() {
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Add New Question</h2>
 
+        <div className="space-y-2">
+          <Label>Question Type</Label>
+          <RadioGroup
+            value={currentQuestion.type}
+            onValueChange={(value: 'multiple-choice' | 'short-answer') => {
+              setCurrentQuestion({
+                ...currentQuestion,
+                type: value,
+                answers: value === 'short-answer' 
+                  ? [{ text: "", isCorrect: true }] 
+                  : Array(4).fill({ text: "", isCorrect: false })
+              })
+            }}
+          >
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="multiple-choice" id="multiple-choice" />
+                <Label htmlFor="multiple-choice">Multiple Choice</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="short-answer" id="short-answer" />
+                <Label htmlFor="short-answer">Short Answer</Label>
+              </div>
+            </div>
+          </RadioGroup>
+        </div>
+
         <div>
           <Label htmlFor="question">Question</Label>
           <Input
@@ -166,25 +198,33 @@ export default function QuizCreator() {
         </div>
 
         <div className="space-y-2">
-          <Label>Options</Label>
-          {currentQuestion.answers.map((answer, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <Input
-                value={answer.text}
-                onChange={(e) => handleOptionChange(index, e.target.value)}
-                placeholder={`Option ${index + 1}`}
-              />
-              <RadioGroup
-                value={answer.isCorrect ? index.toString() : ""}
-                onValueChange={() => handleCorrectAnswerChange(index)}
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-                  <Label htmlFor={`option-${index}`}>Correct</Label>
-                </div>
-              </RadioGroup>
-            </div>
-          ))}
+          <Label>{currentQuestion.type === 'multiple-choice' ? 'Options' : 'Correct Answer'}</Label>
+          {currentQuestion.type === 'multiple-choice' ? (
+            currentQuestion.answers.map((answer, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Input
+                  value={answer.text}
+                  onChange={(e) => handleOptionChange(index, e.target.value)}
+                  placeholder={`Option ${index + 1}`}
+                />
+                <RadioGroup
+                  value={answer.isCorrect ? index.toString() : ""}
+                  onValueChange={() => handleCorrectAnswerChange(index)}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value={index.toString()} id={`option-${index}`} />
+                    <Label htmlFor={`option-${index}`}>Correct</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            ))
+          ) : (
+            <Input
+              value={currentQuestion.answers[0]?.text || ''}
+              onChange={(e) => handleOptionChange(0, e.target.value)}
+              placeholder="Enter the correct answer"
+            />
+          )}
         </div>
 
         <Button onClick={addQuestion}>

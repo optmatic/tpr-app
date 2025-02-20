@@ -8,8 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Trash2, Plus, ArrowLeft } from "lucide-react"
-import { Question } from "@/lib/types"
-import { Quiz } from '../lib/types'
+import { Question, Quiz } from "@/lib/types"
 
 type QuizEditorProps = {
   quiz: Quiz
@@ -17,7 +16,7 @@ type QuizEditorProps = {
   onBack: () => void
 }
 
-export default function QuizEditor({ quiz: initialQuiz, onSave, onBack }: QuizEditorProps) {
+export default function QuizEditor({ quiz: initialQuiz, onSave, onBack, }: QuizEditorProps) {
   const [quiz, setQuiz] = useState<Quiz>(initialQuiz)
 
   const updateQuizTitle = (newTitle: string) => {
@@ -25,19 +24,20 @@ export default function QuizEditor({ quiz: initialQuiz, onSave, onBack }: QuizEd
   }
 
   const addQuestion = () => {
+    const questionId = quiz.questions.length + 1;
     const newQuestion: Question = {
-      id: Date.now(),
+      id: questionId,
       text: "",
       orderIndex: quiz.questions.length,
       quizId: quiz.id,
       type: "multiple-choice",
       correctAnswer: "",
-      answers: [
-        { id: Date.now(), text: "", isCorrect: false, questionId: Date.now() },
-        { id: Date.now() + 1, text: "", isCorrect: false, questionId: Date.now() },
-        { id: Date.now() + 2, text: "", isCorrect: false, questionId: Date.now() },
-        { id: Date.now() + 3, text: "", isCorrect: true, questionId: Date.now() }
-      ]
+      answers: Array(4).fill(null).map((_, index) => ({ 
+        id: Date.now() + index,
+        text: "", 
+        isCorrect: index === 3, 
+        questionId
+      }))
     }
     setQuiz({ ...quiz, questions: [...quiz.questions, newQuestion] })
   }
@@ -94,9 +94,23 @@ export default function QuizEditor({ quiz: initialQuiz, onSave, onBack }: QuizEd
               />
               <RadioGroup
                 value={question.type}
-                onValueChange={(value) =>
-                  updateQuestion(index, { ...question, type: value as "multiple-choice" | "short-answer" })
-                }
+                onValueChange={(value) => {
+                  const newType = value as "multiple-choice" | "short-answer"
+                  const newAnswers = newType === "short-answer"
+                    ? [{ ...question.answers[0], text: question.correctAnswer || "", isCorrect: true }]
+                    : Array(4).fill(null).map((_, i) => ({
+                        id: Date.now() + i,
+                        text: "",
+                        isCorrect: i === 3,
+                        questionId: question.id
+                      }))
+                  updateQuestion(index, { 
+                    ...question, 
+                    type: newType,
+                    answers: newAnswers,
+                    correctAnswer: newType === "short-answer" ? question.answers.find(a => a.isCorrect)?.text || "" : ""
+                  })
+                }}
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="multiple-choice" id={`mc-${index}`} />
@@ -107,7 +121,7 @@ export default function QuizEditor({ quiz: initialQuiz, onSave, onBack }: QuizEd
                   <Label htmlFor={`sa-${index}`}>Short Answer</Label>
                 </div>
               </RadioGroup>
-              {question.type === "multiple-choice" && (
+              {question.type === "multiple-choice" ? (
                 <div className="space-y-2">
                   {question.answers.map((answer, answerIndex) => (
                     <div key={answer.id} className="flex gap-2">
@@ -121,22 +135,33 @@ export default function QuizEditor({ quiz: initialQuiz, onSave, onBack }: QuizEd
                         placeholder={`Option ${answerIndex + 1}`}
                       />
                       <RadioGroup
-                        value={answer.isCorrect ? "correct" : "incorrect"}
-                        onValueChange={(value) => {
+                        value={answer.isCorrect ? answerIndex.toString() : ""}
+                        onValueChange={() => {
                           const newAnswers = question.answers.map((a, idx) => ({
                             ...a,
-                            isCorrect: idx === answerIndex ? value === "correct" : false
+                            isCorrect: idx === answerIndex
                           }))
                           updateQuestion(index, { ...question, answers: newAnswers })
                         }}
                       >
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="correct" id={`correct-${answer.id}`} />
+                          <RadioGroupItem value={answerIndex.toString()} id={`correct-${answer.id}`} />
                           <Label htmlFor={`correct-${answer.id}`}>Correct</Label>
                         </div>
                       </RadioGroup>
                     </div>
                   ))}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Input
+                    value={question.answers[0]?.text || ""}
+                    onChange={(e) => {
+                      const newAnswers = [{ ...question.answers[0], text: e.target.value, isCorrect: true }]
+                      updateQuestion(index, { ...question, answers: newAnswers })
+                    }}
+                    placeholder="Enter the correct answer"
+                  />
                 </div>
               )}
             </div>
