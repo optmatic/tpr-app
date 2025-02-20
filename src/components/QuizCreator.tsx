@@ -148,12 +148,13 @@ export default function QuizCreator() {
   return (
     <div className="space-y-6">
       <div>
-        <Label htmlFor="quiz-title">Quiz Title</Label>
+        <Label htmlFor="quiz-title"><span className="text-lg font-semibold">Quiz Title</span></Label>
         <Input
           id="quiz-title"
           value={quizTitle}
           onChange={(e) => setQuizTitle(e.target.value)}
           placeholder="Enter quiz title"
+          className="mt-2"
         />
       </div>
 
@@ -161,7 +162,7 @@ export default function QuizCreator() {
         <h2 className="text-xl font-semibold">Add New Question</h2>
 
         <div className="space-y-2">
-          <Label>Question Type</Label>
+          <Label><span className="text-lg font-semibold">Question Type</span></Label>
           <RadioGroup
             value={currentQuestion.type}
             onValueChange={(value: 'multiple-choice' | 'short-answer') => {
