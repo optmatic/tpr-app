@@ -10,7 +10,9 @@ import { QuizListProps } from "@/lib/types"
 export default function QuizList({ quizzes, onQuizSelect, isLoading, onArchiveQuiz, onEditQuiz }: QuizListProps) {
   const [searchTerm, setSearchTerm] = useState("")
 
-  const filteredQuizzes = quizzes.filter((quiz) => quiz.title.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredQuizzes = quizzes
+    .filter((quiz) => quiz.title.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 
   const handleDelete = async (id: string) => {
     try {

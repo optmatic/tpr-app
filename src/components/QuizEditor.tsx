@@ -26,6 +26,7 @@ export default function QuizEditor({ quiz: initialQuiz, onSave, onBack, }: QuizE
   const addQuestion = () => {
     const questionId = quiz.questions.length + 1;
     const newQuestion: Question = {
+      updatedAt: new Date(),
       id: questionId,
       text: "",
       orderIndex: quiz.questions.length,

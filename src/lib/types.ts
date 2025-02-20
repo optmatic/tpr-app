@@ -5,6 +5,7 @@ export type Answer = {
 }
 
 export type Question = {
+  updatedAt: Date
   id: number | string
   text: string
   orderIndex: number
@@ -18,6 +19,7 @@ export type Question = {
 export type Quiz = {
   id: number
   title: string
+  updatedAt: Date
   questions: Question[]
   author: {
     id: number
@@ -31,6 +33,7 @@ export type Quiz = {
 export type QuizWithRelations = {
   id: number
   title: string
+  updatedAt: Date
   questions: {
     id: number
     quizId: number
@@ -54,6 +57,7 @@ export type QuizWithRelations = {
 export type QuizListItem = {
   id: string
   title: string
+  updatedAt: Date
   questions: Array<{
     id: string
     type: "multiple-choice" | "short-answer"

@@ -20,6 +20,7 @@ function transformToUIQuiz(quiz: QuizWithRelations): Quiz {
       type: 'multiple-choice',
       orderIndex: q.orderIndex,
       quizId: q.quizId,
+      updatedAt: quiz.updatedAt,
       correctAnswer: q.answers.find(a => a.isCorrect)?.text || '',
       answers: q.answers.map(a => ({
         id: a.id,
@@ -28,7 +29,8 @@ function transformToUIQuiz(quiz: QuizWithRelations): Quiz {
         questionId: a.questionId
       }))
     })),
-    author: quiz.author
+    author: quiz.author,
+    updatedAt: quiz.updatedAt
   }
 }
 
@@ -42,6 +44,7 @@ export default function QuizListClient({ initialQuizzes }: { initialQuizzes: Qui
   const [quizzes] = useState(transformedQuizzes.map(quiz => ({
     id: String(quiz.id),
     title: quiz.title,
+    updatedAt: quiz.updatedAt,
     questions: quiz.questions.map(q => ({
       id: String(q.id),
       type: q.type,
@@ -124,7 +127,7 @@ export default function QuizListClient({ initialQuizzes }: { initialQuizzes: Qui
           onBack={() => setSelectedQuiz(null)} 
         />
       ) : (
-        <QuizList 
+        <QuizList
           quizzes={quizzes}
           onQuizSelect={handleQuizSelect}
           isLoading={false} 
