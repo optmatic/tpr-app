@@ -38,27 +38,31 @@ export default function QuizDisplay({ quiz, onBack, onEditQuiz }: QuizDisplayPro
           <CardContent>
             <p className="mb-4 font-medium"><span className="font-bold">Question:</span> {question.text}</p>
             <div className="space-y-2">
-              {question.type === "multiple-choice" ? (
-                <>
-                  <p className="text-sm text-muted-foreground">Options:</p>
-                  <ul className="list-decimal list-inside">
+              {question.answers?.length > 0 ? (
+                <div className="bg-zinc-50 p-4 rounded-lg">
+                  <p className="text-sm font-semibold text-slate-700 mb-2">Option(s):</p>
+                  <ul className="space-y-2">
                     {question.answers.map((answer) => (
                       <li
                         key={answer.id}
-                        className={answer.isCorrect ? "text-green-600 font-medium" : ""}
+                        className={`flex items-center p-2 rounded ${
+                          answer.isCorrect 
+                            ? "bg-green-100 text-green-700" 
+                            : "bg-white border border-slate-200"
+                        }`}
                       >
-                        {answer.text} {answer.isCorrect && "(Correct Answer)"}
+                        {answer.text} {answer.isCorrect && 
+                          <span className="ml-2 text-sm font-medium">(Correct)</span>
+                        }
                       </li>
                     ))}
                   </ul>
-                </>
+                </div>
               ) : (
-                <>
-                  <p className="text-sm text-muted-foreground">Answer:</p>
-                  <ul className="list-none">
-                    <li className="text-green-600 font-medium">{question.correctAnswer}</li>
-                  </ul>
-                </>
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <p className="text-sm font-semibold text-blue-700 mb-2">Short Answer</p>
+                  <p className="text-blue-700 font-medium pl-2">{question.correctAnswer}</p>
+                </div>
               )}
             </div>
           </CardContent>
