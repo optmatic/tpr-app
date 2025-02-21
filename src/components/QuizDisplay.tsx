@@ -36,12 +36,12 @@ export default function QuizDisplay({ quiz, onBack, onEditQuiz }: QuizDisplayPro
             <CardTitle>Question {index + 1}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="mb-4 font-medium">{question.text}</p>
+            <p className="mb-4 font-medium"><span className="font-bold">Question:</span> {question.text}</p>
             <div className="space-y-2">
               {question.type === "multiple-choice" ? (
                 <>
                   <p className="text-sm text-muted-foreground">Options:</p>
-                  <ul className="list-disc list-inside">
+                  <ul className="list-decimal list-inside">
                     {question.answers.map((answer) => (
                       <li
                         key={answer.id}
@@ -55,7 +55,9 @@ export default function QuizDisplay({ quiz, onBack, onEditQuiz }: QuizDisplayPro
               ) : (
                 <>
                   <p className="text-sm text-muted-foreground">Answer:</p>
-                  <p className="text-green-600 font-medium">{question.correctAnswer}</p>
+                  <ul className="list-none">
+                    <li className="text-green-600 font-medium">{question.correctAnswer}</li>
+                  </ul>
                 </>
               )}
             </div>
