@@ -26,25 +26,30 @@ import {
 } from "@/components/ui/sidebar"
 
 export function SimpleNav({
-  simpleNav,
+  menuData,
 }: {
-  simpleNav: {
-    name: string
-    url: string
-    icon: LucideIcon
-  }[]
+  menuData: {
+    label: string
+    items: {
+      name: string
+      url: string
+      icon: LucideIcon
+    }[]
+  }
 }) {
   const { isMobile } = useSidebar()
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel className="text-black font-normal text-lg font-serif underline underline-offset-2">Assessment</SidebarGroupLabel>
+      <SidebarGroupLabel className="text-black font-normal text-lg font-serif underline underline-offset-2">
+        {menuData.label}
+      </SidebarGroupLabel>
       <SidebarMenu>
-        {simpleNav.map((item) => (
+        {menuData.items.map((item) => (
           <SidebarMenuItem className="text-black" key={item.name}>
             <SidebarMenuButton asChild>
               <a href={item.url}>
-                <item.icon />
+                {item.icon && <item.icon />}
                 <span>{item.name}</span>
               </a>
             </SidebarMenuButton>

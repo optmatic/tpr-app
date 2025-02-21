@@ -16,7 +16,8 @@ import {
   Blocks,
   ListCheck,
   Notebook,
-  NotebookPen
+  NotebookPen,
+  UserRound
 } from "lucide-react"
 
 import Logo from "/public/tutorpro-logo.svg"
@@ -60,51 +61,77 @@ const data = {
     
   ],
 
-  // {
-  //   title: "Documentation",
-  //   url: "#",
-  //   icon: BookOpen,
-  
-  //   },
-
-  // navMain: [
-  //   {
-  //     title: "Assessment",
-  //     url: "/assessment",
-  //     icon: Bot,
-  //     items: [
-  //       {
-  //         title: "Quiz Creator",
-  //         url: "/quiz-creator",
-  //         icon: Blocks,
-  //       },
-  //       {
-  //         title: "Quiz List",
-  //         url: "/quiz-list",
-          
-  //       },
-  //       {
-  //         title: "Student Results",
-  //         url: "/student-results",
-  //       },
-  //     ],
-  //   },
-  // ],
-  simpleNav: [
+  menus: [
     {
-      name: "Quiz Creator",
-      url: "/quiz-creator",
-      icon: Blocks,
+      label: "Admin",
+      items: [
+        {
+          name: "Quiz Creator",
+          url: "/quiz-creator",
+          icon: Blocks,
+        },
+        {
+          name: "Quiz List",
+          url: "/quiz-list",
+          icon: ListCheck,
+        },
+        {
+          name: "Student Results",
+          url: "/student-results",
+          icon: NotebookPen,
+        },
+        {
+          name:"Learning Resources",
+          url: "/learning-resources",
+          icon: BookOpen,
+        },
+      ],
     },
     {
-      name: "Quiz List",
-      url: "/quiz-list",
-      icon: ListCheck,
+      label: "Tutor",
+      items: [
+        {
+          name: "Your Students",
+          url: "/your-students",
+          icon: UserRound,
+        },
+        {
+          name: "Quiz List",
+          url: "/quiz-list",
+          icon: ListCheck,
+        },
+        {
+          name: "Student Results",
+          url: "/student-results",
+          icon: NotebookPen,
+        },
+        {
+          name:"Learning Resources",
+          url: "/learning-resources",
+          icon: BookOpen,
+        },
+        // ... more items
+      ],
     },
     {
-      name: "Student Results",
-      url: "/student-results",
-      icon: NotebookPen,
+      label: "Student",
+      items: [
+        {
+          name: "Assessment",
+          url: "/assessment",
+          icon: Notebook,
+        },
+        {
+          name:"Your Results",
+          url: "/your-results",
+          icon: PieChart,
+        },
+        {
+          name:"Learning Resources",
+          url: "/learning-resources",
+          icon: BookOpen,
+        },
+      ],
     },
   ],
 }
@@ -112,18 +139,17 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
-      {/* <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
-      </SidebarHeader> */}
       <SidebarContent>
-        {/* <NavMain items={data.navMain} /> */}
         <div className="p-4">
           <a href="/dashboard">
             <img src={Logo.src} alt="TutorPro Logo" className="w-[180px] h-[80px]" />
           </a>
         </div>
-        <SimpleNav simpleNav={data.simpleNav} />
+        {data.menus.map((menu) => (
+          <SimpleNav key={menu.label} menuData={menu} />
+        ))}
       </SidebarContent>
+
       <SidebarFooter>
         <NavUser user={data.user} />
       </SidebarFooter>
