@@ -1,21 +1,39 @@
-import { put } from "@vercel/blob"
+import { writeFile, mkdir } from "fs/promises"
+import { join } from "path"
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const filename = searchParams.get("filename")
-
-  if (!filename) {
-    return NextResponse.json({ error: "Filename is required" }, { status: 400 })
-  }
-
   try {
-    const blob = await put(filename, request.body, {
-      access: "public",
-    })
+    const formData = await request.formData()
+    const file = formData.get("file") as File
 
-    return NextResponse.json(blob)
+    if (!file) {
+      return NextResponse.json({ error: "No file provided" }, { status: 400 })
+    }
+
+    // Create uploads directory if it doesn't exist
+    const uploadDir = join(process.cwd(), "public/uploads")
+    try {
+      await mkdir(uploadDir, { recursive: true })
+    } catch (error) {
+      // Directory already exists
+    }
+
+    // Convert File to Buffer
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+
+    // Write file to public/uploads
+    const filePath = join(uploadDir, file.name)
+    await writeFile(filePath, buffer)
+
+    return NextResponse.json({
+      name: file.name,
+      path: `/uploads/${file.name}`,
+      size: buffer.length,
+    })
   } catch (error) {
+    console.error("Upload error:", error)
     return NextResponse.json({ error: "Error uploading file" }, { status: 500 })
   }
 }

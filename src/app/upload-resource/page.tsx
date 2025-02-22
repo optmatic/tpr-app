@@ -1,4 +1,4 @@
-import { UploadResource } from "../../components/UploadResource"
+import { UploadResource } from "@/components/UploadResource"
 import { ResourceGrid } from "@/components/ResourceGrid"
 
 export default function Page() {

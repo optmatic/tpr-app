@@ -5,39 +5,49 @@ import { useDropzone } from "react-dropzone"
 import { Cloud, File, Loader2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { useRouter } from "next/navigation"
 
 export function UploadResource() {
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const router = useRouter()
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    try {
-      setIsUploading(true)
+  const onDrop = useCallback(
+    async (acceptedFiles: File[]) => {
+      try {
+        setIsUploading(true)
 
-      for (const file of acceptedFiles) {
-        const filename = encodeURIComponent(file.name)
-        const response = await fetch(`/api/upload?filename=${filename}`, {
-          method: "POST",
-          body: file,
-        })
+        for (const file of acceptedFiles) {
+          const formData = new FormData()
+          formData.append("file", file)
 
-        if (!response.ok) {
-          throw new Error("Upload failed")
+          const response = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+          })
+
+          if (!response.ok) {
+            throw new Error("Upload failed")
+          }
+
+          // Simulate upload progress
+          for (let i = 0; i <= 100; i += 10) {
+            setUploadProgress(i)
+            await new Promise((resolve) => setTimeout(resolve, 100))
+          }
         }
 
-        // Simulate upload progress
-        for (let i = 0; i <= 100; i += 10) {
-          setUploadProgress(i)
-          await new Promise((resolve) => setTimeout(resolve, 100))
-        }
+        // Refresh the page to show new uploads
+        router.refresh()
+      } catch (error) {
+        console.error("Upload error:", error)
+      } finally {
+        setIsUploading(false)
+        setUploadProgress(0)
       }
-    } catch (error) {
-      console.error("Upload error:", error)
-    } finally {
-      setIsUploading(false)
-      setUploadProgress(0)
-    }
-  }, [])
+    },
+    [router],
+  )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
