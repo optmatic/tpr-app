@@ -76,15 +76,16 @@ const data = {
           icon: ListCheck,
         },
         {
+          name: "Learning Resources",
+          url: "/learning-resources",
+          icon: BookOpen,
+        },
+        {
           name: "Student Results",
           url: "/student-results",
           icon: NotebookPen,
         },
-        {
-          name:"Learning Resources",
-          url: "/learning-resources",
-          icon: BookOpen,
-        },
+        
       ],
     },
     {

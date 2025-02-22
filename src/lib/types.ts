@@ -1,3 +1,17 @@
+export type Resource = {
+  id: number
+  title: string
+  description: string
+  downloadUrl: string
+  fileName: string
+  thumbnail: string
+  lastUpdated: string
+  year: string
+  subject: string
+  curriculumCode: string
+  topic: string
+}
+
 export type Answer = {
   id: number
   text: string
