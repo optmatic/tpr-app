@@ -6,6 +6,10 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData()
     const file = formData.get("file") as File
+    const image = formData.get("image") as File
+    const title = formData.get("title") as string
+    const yearLevel = formData.get("yearLevel") as string
+    const subject = formData.get("subject") as string
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 })
@@ -13,24 +17,41 @@ export async function POST(request: Request) {
 
     // Create uploads directory if it doesn't exist
     const uploadDir = join(process.cwd(), "public/uploads")
+    const imageDir = join(process.cwd(), "public/uploads/images")
     try {
       await mkdir(uploadDir, { recursive: true })
+      await mkdir(imageDir, { recursive: true })
     } catch (error) {
-      // Directory already exists
+      // Directories already exist
     }
 
-    // Convert File to Buffer
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-
-    // Write file to public/uploads
+    // Handle main resource file
+    const fileBytes = await file.arrayBuffer()
+    const fileBuffer = Buffer.from(fileBytes)
     const filePath = join(uploadDir, file.name)
-    await writeFile(filePath, buffer)
+    await writeFile(filePath, fileBuffer)
+
+    // Handle image file if provided
+    let imagePath = null
+    if (image) {
+      const imageBytes = await image.arrayBuffer()
+      const imageBuffer = Buffer.from(imageBytes)
+      const imageFileName = `${Date.now()}-${image.name}`
+      imagePath = join(imageDir, imageFileName)
+      await writeFile(imagePath, imageBuffer)
+    }
 
     return NextResponse.json({
       name: file.name,
       path: `/uploads/${file.name}`,
-      size: buffer.length,
+      imagePath: imagePath ? `/uploads/images/${imagePath.split('/').pop()}` : null,
+      size: fileBuffer.length,
+      metadata: {
+        title,
+        yearLevel,
+        subject,
+        uploadDate: new Date().toISOString(),
+      }
     })
   } catch (error) {
     console.error("Upload error:", error)

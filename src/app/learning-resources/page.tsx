@@ -9,12 +9,10 @@ import { Badge } from "@/components/ui/badge"
 import { Download } from "lucide-react"
 import { Resource, UploadedFile } from "@/lib/types"
 import { getUploadedResources } from "@/lib/resources"
-
-
+import { UploadResource } from "@/components/UploadResource"
 
 const yearLevels = ["Foundation", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6"]
 const subjects = ["Mathematics", "English", "Science", "History", "Geography"]
-
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-GB', {
@@ -24,12 +22,12 @@ const formatDate = (dateString: string) => {
   });
 };
 
-
 export default function LearningResources() {
   const [selectedResources, setSelectedResources] = useState<Set<string>>(new Set())
   const [yearFilter, setYearFilter] = useState<string>("")
   const [subjectFilter, setSubjectFilter] = useState<string>("")
   const [uploadedResourcesFormatted, setUploadedResourcesFormatted] = useState<Resource[]>([])
+  const [resources, setResources] = useState<Resource[]>([])
 
   // Fetch resources on component mount
   useEffect(() => {
@@ -81,6 +79,32 @@ export default function LearningResources() {
     if (subjectFilter && subjectFilter !== "all" && resource.subject !== subjectFilter) return false;
     return true;
   });
+
+  // Update the handleNewResource function to transform the upload response into a Resource
+  const handleNewResource = (uploadedResource: { 
+    name: string; 
+    size: number; 
+    uploadDate: Date; 
+    title: string; 
+    yearLevel: string; 
+    subject: string; 
+    imageUrl: string; 
+  }) => {
+    const resource: Resource = {
+      id: Date.now(), // Temporary ID
+      title: uploadedResource.title,
+      fileName: uploadedResource.name,
+      downloadUrl: uploadedResource.imageUrl,
+      thumbnail: uploadedResource.imageUrl,
+      year: uploadedResource.yearLevel,
+      subject: uploadedResource.subject,
+      curriculumCode: "-",
+      topic: `Size: ${Math.round(uploadedResource.size / 1024)}kb`,
+      lastUpdated: uploadedResource.uploadDate.toISOString(),
+      description: ""
+    }
+    setResources(prev => [resource, ...prev])
+  }
 
   return (
     <div className="container mx-auto p-4">
@@ -162,6 +186,8 @@ export default function LearningResources() {
           </Card>
         ))}
       </div>
+
+      <UploadResource onUploadSuccess={handleNewResource} />
     </div>
   )
 }
