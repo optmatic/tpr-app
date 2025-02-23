@@ -35,13 +35,19 @@ export async function ResourceGrid() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {files.map((file) => (
-        <Card key={file.path} className="hover:bg-muted/50 transition-colors cursor-pointer">
-          <CardContent className="p-4 flex flex-col items-center justify-center gap-2">
-            <FileText className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm font-medium truncate w-full text-center">{file.name}</p>
-            <p className="text-xs text-muted-foreground">{Math.round(file.size / 1024)}kb</p>
-          </CardContent>
-        </Card>
+        <a 
+          href={file.path}
+          download={file.name}
+          key={file.path}
+        >
+          <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+            <CardContent className="p-4 flex flex-col items-center justify-center gap-2">
+              <FileText className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm font-medium truncate w-full text-center">{file.name}</p>
+              <p className="text-xs text-muted-foreground">{Math.round(file.size / 1024)}kb</p>
+            </CardContent>
+          </Card>
+        </a>
       ))}
     </div>
   )
