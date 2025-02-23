@@ -1,36 +1,27 @@
-import { Card, CardContent } from "@/components/ui/card"
+"use client"
+
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { FileText } from "lucide-react"
-import { readdir, stat, mkdir } from "fs/promises"
-import { join } from "path"
+import { useState, useEffect } from "react"
+import { Badge } from "@/components/ui/badge"
 
 interface FileInfo {
+  id: number
   name: string
   size: number
   path: string
+  lastUpdated: string
 }
 
-export async function ResourceGrid() {
-  const uploadDir = join(process.cwd(), "public/uploads")
-  let files: FileInfo[] = []
+export function ResourceGrid() {
+  const [files, setFiles] = useState<FileInfo[]>([])
 
-  try {
-    await mkdir(uploadDir, { recursive: true })
-    const fileNames = await readdir(uploadDir)
-    
-    const filePromises = fileNames.map(async (name) => {
-      const filePath = join(uploadDir, name)
-      const stats = await stat(filePath)
-      return {
-        name,
-        size: stats.size,
-        path: `/uploads/${name}`,
-      }
-    })
-
-    files = await Promise.all(filePromises)
-  } catch (error) {
-    console.error("Error reading uploads directory:", error)
-  }
+  useEffect(() => {
+    fetch('/api/resources')
+      .then(res => res.json())
+      .then(data => setFiles(data))
+      .catch(error => console.error("Error fetching resources:", error))
+  }, [])
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

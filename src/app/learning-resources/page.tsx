@@ -1,13 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Download } from "lucide-react"
-import { Resource } from "@/lib/types"
+import { Resource, UploadedFile } from "@/lib/types"
+import { getUploadedResources } from "@/lib/resources"
+
 
 
 const yearLevels = ["Foundation", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6"]
@@ -23,10 +25,32 @@ const formatDate = (dateString: string) => {
 };
 
 
-export default function LearningResources({ resources = [] }: { resources?: Resource[] }) {
+export default function LearningResources() {
   const [selectedResources, setSelectedResources] = useState<Set<string>>(new Set())
   const [yearFilter, setYearFilter] = useState<string>("")
   const [subjectFilter, setSubjectFilter] = useState<string>("")
+  const [uploadedResourcesFormatted, setUploadedResourcesFormatted] = useState<Resource[]>([])
+
+  // Fetch resources on component mount
+  useEffect(() => {
+    const fetchResources = async () => {
+      const uploadedResources = await getUploadedResources()
+      const formatted = uploadedResources.map((file: UploadedFile) => ({
+        id: file.id,
+        title: file.name,
+        fileName: file.name,
+        downloadUrl: file.path,
+        thumbnail: "/placeholder.svg",
+        year: "Uploaded",
+        subject: "Resource",
+        curriculumCode: "-",
+        topic: `Size: ${Math.round(file.size / 1024)}kb`,
+        lastUpdated: file.lastUpdated
+      }))
+      setUploadedResourcesFormatted(formatted)
+    }
+    fetchResources()
+  }, [])
 
   const toggleResource = (id: string) => {
     const newSelected = new Set(selectedResources)
@@ -40,23 +64,23 @@ export default function LearningResources({ resources = [] }: { resources?: Reso
 
   const handleDownload = () => {
     selectedResources.forEach((id) => {
-      const resource = resources.find(r => r.id === Number(id));
-      if (!resource) return;
+      const resource = uploadedResourcesFormatted.find((r) => r.id === Number(id))
+      if (!resource) return
 
-      const link = document.createElement('a');
-      link.href = resource.downloadUrl;
-      link.download = resource.fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    });
+      const link = document.createElement('a')
+      link.href = resource.downloadUrl
+      link.download = resource.fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    })
   }
 
-  const filteredResources = resources.filter((resource) => {
-    if (yearFilter && yearFilter !== "all" && resource.year !== yearFilter) return false
-    if (subjectFilter && subjectFilter !== "all" && resource.subject !== subjectFilter) return false
-    return true
-  })
+  const filteredResources = uploadedResourcesFormatted.filter((resource) => {
+    if (yearFilter && yearFilter !== "all" && resource.year !== yearFilter) return false;
+    if (subjectFilter && subjectFilter !== "all" && resource.subject !== subjectFilter) return false;
+    return true;
+  });
 
   return (
     <div className="container mx-auto p-4">

@@ -12,9 +12,20 @@ export type Resource = {
   topic: string
 }
 
+
+export type UploadedFile = {
+  id: number
+  name: string
+  size: number
+  path: string
+  lastUpdated: string
+}
+
+
 export type Answer = {
   id: number
   text: string
+
   isCorrect: boolean
 }
 
