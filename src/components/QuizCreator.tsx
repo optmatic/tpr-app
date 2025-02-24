@@ -72,10 +72,12 @@ export default function QuizCreator() {
       // Debug logs
       console.log('Original questions:', questions);
 
-      // Validate questions more thoroughly
+      // Validate questions
       const validQuestions = questions.filter(q => {
         const hasValidText = q.text.trim().length > 0;
-        const hasValidAnswer = q.answers.some(a => a.text.trim() && a.isCorrect);
+        const hasValidAnswer = q.type === 'multiple-choice' 
+          ? q.answers.some(a => a.text.trim() && a.isCorrect)
+          : q.answers[0]?.text.trim().length > 0;
         
         console.log('Question validation:', {
           text: q.text,
@@ -99,17 +101,22 @@ export default function QuizCreator() {
         questions: validQuestions.map(q => ({
           text: q.text.trim(),
           orderIndex: q.orderIndex,
-          type: 'multiple-choice',
-          answers: q.answers
-            .filter(a => a.text.trim())
-            .map(a => ({
-              text: a.text.trim(),
-              isCorrect: a.isCorrect
-            }))
+          type: q.type,
+          ...(q.type === 'multiple-choice' 
+            ? {
+                answers: q.answers
+                  .filter(a => a.text.trim())
+                  .map(a => ({
+                    text: a.text.trim(),
+                    isCorrect: a.isCorrect
+                  }))
+              }
+            : {
+                correctAnswer: q.answers[0].text.trim(),
+                answers: []
+              })
         }))
       };
-      // Log the stringified version to see exact structure
-      console.log('Request body (stringified):', JSON.stringify(requestBody, null, 2));
 
       const response = await fetch('/api/quizzes', {
         method: 'POST',
@@ -238,16 +245,39 @@ export default function QuizCreator() {
         {questions.map((q, index) => (
           <div key={index} className="border p-4 rounded-md">
             <div className="flex justify-between items-start">
-              <p className="font-medium">{q.text}</p>
+              <p className="font-medium mb-4"><span className="font-bold">Question {index + 1}:</span> {q.text}</p>
               <Button variant="ghost" size="icon" onClick={() => removeQuestion(index)}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
-            <ul className="list-disc list-inside mt-2">
-              {q.answers.map((answer, i) => (
-                <li key={i}>{answer.text}</li>
-              ))}
-            </ul>
+            <div className="space-y-2">
+              {q.type === 'multiple-choice' ? (
+                <div className="bg-zinc-50 p-4 rounded-lg">
+                  <p className="text-sm font-semibold text-slate-700 mb-2">Option(s):</p>
+                  <ul className="space-y-2">
+                    {q.answers.map((answer, i) => (
+                      <li
+                        key={i}
+                        className={`flex items-center p-2 rounded ${
+                          answer.isCorrect 
+                            ? "bg-green-100 text-green-700" 
+                            : "bg-white border border-slate-200"
+                        }`}
+                      >
+                        {answer.text} {answer.isCorrect && 
+                          <span className="ml-2 text-sm font-medium">(Correct)</span>
+                        }
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <p className="text-sm font-semibold text-blue-700 mb-2">Short Answer</p>
+                  <p className="text-blue-700 font-medium pl-2">{q.answers[0]?.text}</p>
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>

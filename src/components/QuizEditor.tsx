@@ -156,10 +156,17 @@ export default function QuizEditor({ quiz: initialQuiz, onSave, onBack, }: QuizE
               ) : (
                 <div className="space-y-2">
                   <Input
-                    value={question.answers[0]?.text || ""}
+                    value={question.correctAnswer || ""}
                     onChange={(e) => {
-                      const newAnswers = [{ ...question.answers[0], text: e.target.value, isCorrect: true }]
-                      updateQuestion(index, { ...question, answers: newAnswers })
+                      updateQuestion(index, { 
+                        ...question, 
+                        correctAnswer: e.target.value,
+                        answers: [{ 
+                          id: question.answers[0]?.id || Date.now(),
+                          text: e.target.value,
+                          isCorrect: true
+                        }]
+                      })
                     }}
                     placeholder="Enter the correct answer"
                   />

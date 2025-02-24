@@ -32,9 +32,11 @@ model Question {
   id          Int       @id @default(autoincrement())
   text        String
   orderIndex  Int
+  type        String    // Add this field to store question type
   quiz        Quiz      @relation(fields: [quizId], references: [id])
   quizId      Int
   answers     Answer[]
+  correctAnswer String? // Add this field for short answer questions
   attempts    QuestionAttempt[]
 }
 

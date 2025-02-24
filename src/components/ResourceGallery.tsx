@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Download } from "lucide-react"
+<<<<<<< HEAD
 import PlaceholderImage from "../../public/placeholder.png"
 
 interface Resource {
@@ -19,10 +20,15 @@ interface Resource {
   curriculumCode: string
   topic: string
 }
+=======
+import { Resource } from "@/lib/types"
+
+>>>>>>> origin/dev
 
 const yearLevels = ["Foundation", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6"]
 const subjects = ["Mathematics", "English", "Science", "History", "Geography"]
 
+<<<<<<< HEAD
 const resources: Resource[] = [
   {
     id: "1",
@@ -85,6 +91,8 @@ const resources: Resource[] = [
     topic: "Climate",
   },
 ]
+=======
+>>>>>>> origin/dev
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-GB', {
@@ -94,7 +102,11 @@ const formatDate = (dateString: string) => {
   });
 };
 
+<<<<<<< HEAD
 export default function ResourceGallery() {
+=======
+export default function ResourceGallery({ resources }: { resources: Resource[] }) {
+>>>>>>> origin/dev
   const [selectedResources, setSelectedResources] = useState<Set<string>>(new Set())
   const [yearFilter, setYearFilter] = useState<string>("")
   const [subjectFilter, setSubjectFilter] = useState<string>("")
@@ -110,7 +122,21 @@ export default function ResourceGallery() {
   }
 
   const handleDownload = () => {
+<<<<<<< HEAD
     console.log("Downloading resources:", Array.from(selectedResources))
+=======
+    selectedResources.forEach((id) => {
+      const resource = resources.find(r => r.id === Number(id));
+      if (!resource) return;
+
+      const link = document.createElement('a');
+      link.href = resource.downloadUrl;
+      link.download = resource.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+>>>>>>> origin/dev
   }
 
   const filteredResources = resources.filter((resource) => {
@@ -163,15 +189,24 @@ export default function ResourceGallery() {
           <Card
             key={resource.id}
             className={`group transition-all duration-200 hover:shadow-md ${
+<<<<<<< HEAD
               selectedResources.has(resource.id) ? "ring-2 ring-primary" : ""
+=======
+              selectedResources.has(resource.id.toString()) ? "ring-2 ring-primary" : ""
+>>>>>>> origin/dev
             }`}
           >
             <CardContent className="p-0">
               <div className="relative">
                 <div className="absolute left-3 top-3 z-10">
                   <Checkbox
+<<<<<<< HEAD
                     checked={selectedResources.has(resource.id)}
                     onCheckedChange={() => toggleResource(resource.id)}
+=======
+                    checked={selectedResources.has(resource.id.toString())}
+                    onCheckedChange={() => toggleResource(resource.id.toString())}
+>>>>>>> origin/dev
                     className="h-5 w-5 border-2 border-white bg-white/90 transition-opacity group-hover:opacity-100 data-[state=checked]:bg-primary lg:opacity-0"
                   />
                 </div>

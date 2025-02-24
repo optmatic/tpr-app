@@ -17,7 +17,8 @@ import {
   ListCheck,
   Notebook,
   NotebookPen,
-  UserRound
+  UserRound,
+  Upload
 } from "lucide-react"
 
 import Logo from "/public/tutorpro-logo.svg"
@@ -76,15 +77,21 @@ const data = {
           icon: ListCheck,
         },
         {
+          name: "Upload Resource",
+          url: "/upload-resource",
+          icon: Upload,
+        },
+        {
+          name: "Learning Resources",
+          url: "/learning-resources",
+          icon: BookOpen,
+        },
+        {
           name: "Student Results",
           url: "/student-results",
           icon: NotebookPen,
         },
-        {
-          name:"Learning Resources",
-          url: "/learning-resources",
-          icon: BookOpen,
-        },
+        
       ],
     },
     {
