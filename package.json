@@ -29,7 +29,7 @@
     "prisma": "^6.3.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-dropzone": "^14.3.5",
+    "react-dropzone": "^14.3.6",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7"
   },
@@ -38,6 +38,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-dropzone": "^5.1.0",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
     "postcss": "^8",

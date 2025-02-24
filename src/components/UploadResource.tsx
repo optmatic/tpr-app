@@ -5,7 +5,6 @@ import { useDropzone } from "react-dropzone"
 import { Cloud, File, Loader2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -26,7 +25,6 @@ interface UploadResourceProps {
 
 export function UploadResource({ onUploadSuccess }: UploadResourceProps) {
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
   const [showDetailsDialog, setShowDetailsDialog] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
@@ -45,7 +43,6 @@ export function UploadResource({ onUploadSuccess }: UploadResourceProps) {
     subject: string;
     imageUrl: string;
   } | null>(null)
-  const router = useRouter()
 
   const yearLevels = ["Foundation", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6"]
   const subjects = ["Mathematics", "English", "Science", "History", "Geography"]
