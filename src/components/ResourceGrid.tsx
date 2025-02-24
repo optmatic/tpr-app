@@ -4,21 +4,14 @@ import { Card, CardContent } from "@/components/ui/card"
 import { FileText } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
+import { ResourceInfo } from "@/lib/types"
 
-interface ResourceInfo {
-  id: number
-  name: string
-  size: number
-  path: string
-  lastUpdated: string
-  title: string
-  yearLevel: string
-  subject: string
-  imageUrl: string
+interface ResourceGridProps {
+  resources: ResourceInfo[]
+  setResources: React.Dispatch<React.SetStateAction<ResourceInfo[]>>
 }
 
-export function ResourceGrid() {
-  const [resources, setResources] = useState<ResourceInfo[]>([])
+export function ResourceGrid({ resources, setResources }: ResourceGridProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -30,7 +23,6 @@ export function ResourceGrid() {
         return res.json()
       })
       .then(data => {
-        console.log('Fetched resources:', data) // Debug log
         setResources(data)
       })
       .catch(error => {
@@ -38,7 +30,7 @@ export function ResourceGrid() {
         setError(error.message)
       })
       .finally(() => setIsLoading(false))
-  }, [])
+  }, []) // Initial fetch only
 
   if (isLoading) return <div>Loading resources...</div>
   if (error) return <div>Error loading resources: {error}</div>
@@ -47,33 +39,25 @@ export function ResourceGrid() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {resources.map((resource) => (
-        <a 
-          href={resource.path}
-          download={resource.name}
+        <Card 
           key={resource.id}
+          className="hover:bg-muted/50 transition-colors cursor-pointer"
         >
-          <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-            <CardContent className="p-4">
-              {resource.imageUrl ? (
-                <img 
-                  src={resource.imageUrl} 
-                  alt={resource.title}
-                  className="w-full h-32 object-cover mb-3 rounded"
-                />
-              ) : (
-                <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-              )}
-              <div className="space-y-2">
-                <p className="text-sm font-medium truncate">{resource.title}</p>
-                <div className="flex gap-2">
-                  <Badge variant="outline" className="text-xs">{resource.yearLevel}</Badge>
-                  <Badge variant="outline" className="text-xs">{resource.subject}</Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">{Math.round(resource.size / 1024)}kb</p>
+          <CardContent className="p-4">
+            <FileText className="h-32 w-full text-muted-foreground" />
+            <div className="space-y-2">
+              <h3 className="font-medium truncate">{resource.name}</h3>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary">Year Level: {resource.yearLevel}</Badge>
+                <Badge variant="outline">Subject: {resource.subject}</Badge>
               </div>
-            </CardContent>
-          </Card>
-        </a>
+              <div className="flex justify-between items-center text-xs text-muted-foreground">
+                <span>Size: {Math.round(resource.size / 1024)} KB</span>
+                <span>Last updated: {new Date(resource.lastUpdated).toLocaleDateString()}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       ))}
     </div>
   )

@@ -138,7 +138,7 @@ export function UploadResource({ onUploadSuccess }: UploadResourceProps) {
               {isUploading ? (
                 <>
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                  <Progress value={uploadProgress} className="w-1/2" />
+                  <Progress value={0} className="w-1/2" />
                 </>
               ) : (
                 <>

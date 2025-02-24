@@ -103,3 +103,15 @@ export type QuizDisplayProps = {
   onBack: () => void
   onEditQuiz: (quizId: string) => void
 }
+
+export interface ResourceInfo {
+  id: number
+  name: string
+  size: number
+  path: string
+  lastUpdated: string
+  title: string
+  yearLevel: string
+  subject: string
+  imageUrl: string
+}

@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-import ResourceGallery from "@/components/ResourceGallery"
-
-export default function LearningResources() {
-  return (
-      <ResourceGallery />
-=======
 "use client"
 
 import { useState, useEffect } from "react"
@@ -107,7 +100,7 @@ export default function LearningResources() {
       subject: uploadedResource.subject,
       curriculumCode: "-",
       topic: `Size: ${Math.round(uploadedResource.size / 1024)}kb`,
-      lastUpdated: uploadedResource.uploadDate.toISOString(),
+      lastUpdated: uploadedResource.uploadDate?.toISOString() || new Date().toISOString(),
       description: ""
     }
     setResources(prev => [resource, ...prev])
@@ -196,6 +189,5 @@ export default function LearningResources() {
 
       <UploadResource onUploadSuccess={handleNewResource} />
     </div>
->>>>>>> origin/dev
   )
 }
