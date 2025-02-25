@@ -23,40 +23,61 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Quiz, Question, Answer } from "@/lib/types";
 
-// Add this function at the top level, similar to QuizListClient
-function transformToUIQuiz(quizData: any): Quiz {
-  if (!quizData) return null;
-
+// Type-safe transform function
+function transformToUIQuiz(quiz: {
+  id: number;
+  title: string;
+  questions: Array<{
+    id: number;
+    text: string;
+    type?: string;
+    orderIndex?: number;
+    quizId: number;
+    updatedAt?: string;
+    correctAnswer?: string;
+    answers: Array<{
+      id: number;
+      text: string;
+      isCorrect: boolean;
+      questionId: number;
+    }>;
+  }>;
+  author?: any;
+  updatedAt?: string;
+}): Quiz {
   return {
-    id: quizData.id,
-    title: quizData.title,
-    questions:
-      quizData.questions?.map((q: any) => ({
-        id: q.id,
-        text: q.text,
-        type: "multiple-choice",
-        orderIndex: q.orderIndex || 0,
-        quizId: q.quizId,
-        updatedAt: quizData.updatedAt,
-        correctAnswer: q.answers?.find((a: any) => a.isCorrect)?.text || "",
-        answers:
-          q.answers?.map((a: any) => ({
-            id: a.id,
-            text: a.text,
-            isCorrect: a.isCorrect,
-            questionId: a.questionId,
-          })) || [],
-      })) || [],
-    author: quizData.author || { name: "Unknown" },
-    updatedAt: quizData.updatedAt,
+    id: quiz.id,
+    title: quiz.title,
+    questions: quiz.questions.map((q) => ({
+      id: q.id,
+      text: q.text,
+      type: (q.type === "short-answer" ? "short-answer" : "multiple-choice") as
+        | "multiple-choice"
+        | "short-answer",
+      orderIndex: q.orderIndex || 0,
+      quizId: q.quizId,
+      updatedAt: new Date(
+        q.updatedAt || quiz.updatedAt || new Date().toISOString()
+      ),
+      correctAnswer: q.answers.find((a) => a.isCorrect)?.text || "",
+      answers: q.answers.map((a) => ({
+        id: a.id,
+        text: a.text,
+        isCorrect: a.isCorrect,
+        questionId: a.questionId,
+      })),
+    })),
+    author: quiz.author,
+    updatedAt: new Date(quiz.updatedAt || new Date().toISOString()),
   };
 }
 
 export default function PretestPage() {
   // Quiz selection state
   const [quizzes, setQuizzes] = useState<any[]>([]);
-  const [selectedQuiz, setSelectedQuiz] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [selectedQuizId, setSelectedQuizId] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   // Quiz taking state
@@ -65,10 +86,12 @@ export default function PretestPage() {
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [quizLoading, setQuizLoading] = useState(false);
-  const [quizError, setQuizError] = useState<string | null>(null);
 
-  console.log("=========== PRETESTING LOGS ==========");
-  console.log("QuizDisplay received quiz:", JSON.stringify(quiz, null, 2));
+  // Only log quiz data when it changes, not on every render
+  useEffect(() => {
+    console.log("=========== PRETESTING LOGS ==========");
+    console.log("QuizDisplay received quiz:", quiz);
+  }, [quiz]); // This will run only when quiz changes, not on every render
 
   // Fetch all quizzes on page load
   useEffect(() => {
@@ -104,106 +127,70 @@ export default function PretestPage() {
   }, []);
 
   // Handle quiz selection
-  const handleQuizSelect = async (quizId: string | number) => {
+  const handleQuizSelect = async (quizId: number) => {
+    setError(null);
+    setQuizLoading(true);
+
     try {
-      const quiz = quizzes.find((q) => q.id === quizId);
-      if (!quiz) {
-        setQuizError(`Quiz with ID ${quizId} not found in loaded quizzes`);
-        return;
+      console.log("Fetching quiz with ID:", quizId);
+
+      // Try the assessment endpoint first
+      let response = await fetch(`/api/assessment?id=${quizId}`);
+      console.log("Response status:", response.status);
+
+      // If that fails, try the quizzes endpoint
+      if (!response.ok) {
+        console.log("Assessment endpoint failed, trying quizzes endpoint");
+        response = await fetch(`/api/quizzes/${quizId}`);
+        console.log("Quizzes endpoint response status:", response.status);
       }
-
-      setSelectedQuiz(quiz);
-      setQuizLoading(true);
-      setQuizError(null);
-
-      console.log(`Fetching quiz with ID: ${quizId}`);
-
-      // Fetch the complete quiz with questions and answers
-      const response = await fetch(`/api/quizzes/${quizId}`, {
-        headers: {
-          Accept: "application/json",
-        },
-      });
-
-      console.log(`Response status: ${response.status}`);
 
       if (!response.ok) {
-        let errorMessage;
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData?.error || JSON.stringify(errorData);
-        } catch (e) {
-          errorMessage = (await response.text()) || "Unknown error";
-        }
+        const errorData = await response.json();
 
-        // Store the failed quiz ID in localStorage
-        const storedFailedQuizzes = localStorage.getItem("failedQuizIds");
-        const failedQuizIds = storedFailedQuizzes
-          ? JSON.parse(storedFailedQuizzes)
-          : [];
-        if (!failedQuizIds.includes(quiz.id)) {
-          failedQuizIds.push(quiz.id);
+        // Store this quiz ID as problematic for future reference
+        const storedFailedQuizzes =
+          localStorage.getItem("failedQuizIds") || "[]";
+        const failedQuizIds = JSON.parse(storedFailedQuizzes);
+
+        if (!failedQuizIds.includes(quizId)) {
+          failedQuizIds.push(quizId);
           localStorage.setItem("failedQuizIds", JSON.stringify(failedQuizIds));
+
+          // Mark this quiz as failed in the current state
+          setQuizzes((prevQuizzes) =>
+            prevQuizzes.map((quiz) =>
+              quiz.id === quizId ? { ...quiz, hasFailedPreviously: true } : quiz
+            )
+          );
         }
 
-        // Update the quiz list to mark this quiz as having failed
-        setQuizzes((prevQuizzes) =>
-          prevQuizzes.map((q) =>
-            q.id === quiz.id ? { ...q, hasFailedPreviously: true } : q
-          )
-        );
-
         throw new Error(
-          `Failed to fetch quiz (${response.status}): ${errorMessage}`
-        );
-      }
-
-      const quizData = await response.json();
-      console.log("Quiz data received:", quizData ? "data present" : "no data");
-
-      // Check if the quiz data has the expected structure
-      if (!quizData) {
-        throw new Error("No quiz data received from server");
-      }
-
-      if (!quizData.questions || !Array.isArray(quizData.questions)) {
-        throw new Error(
-          `Invalid quiz data: questions property is ${
-            quizData.questions ? typeof quizData.questions : "missing"
+          `Failed to fetch quiz (${response.status}): ${
+            errorData.error || "Unknown error"
           }`
         );
       }
 
-      // Use the same transformation function as QuizListClient
-      const transformedQuiz = transformToUIQuiz(quizData);
-
-      // Validate that all questions have answers
-      const invalidQuestions = transformedQuiz.questions.filter(
-        (q) => !q.answers || q.answers.length === 0
-      );
-      if (invalidQuestions.length > 0) {
-        throw new Error(
-          `${invalidQuestions.length} questions are missing answer options`
-        );
-      }
+      const data = await response.json();
 
       console.log(
-        "Transformed quiz:",
-        JSON.stringify(transformedQuiz, null, 2)
+        "==================== PRETEST QUIZ DATA ===================="
       );
+      console.log("Quiz data received:", JSON.stringify(data, null, 2));
+      console.log("Quiz questions:", data.questions);
 
+      // Transform the data before setting it to state
+      const transformedQuiz = transformToUIQuiz(data);
       setQuiz(transformedQuiz);
-      // Initialize user answers array with empty strings
-      setUserAnswers(Array(transformedQuiz.questions.length).fill(""));
+      setSelectedQuizId(quizId);
       setCurrentQuestionIndex(0);
+      setUserAnswers([]);
       setShowResults(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error selecting quiz:", error);
-      setQuizError(
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch quiz: " + String(error)
-      );
+      setError(error.message);
+      setQuiz(null);
     } finally {
       setQuizLoading(false);
     }
@@ -251,7 +238,7 @@ export default function PretestPage() {
 
   // Reset quiz state and go back to quiz selection
   const handleBackToQuizzes = () => {
-    setSelectedQuiz(null);
+    setSelectedQuizId(null);
     setQuiz(null);
     setUserAnswers([]);
     setCurrentQuestionIndex(0);
@@ -272,7 +259,7 @@ export default function PretestPage() {
   }
 
   // Quiz selection view
-  if (!selectedQuiz) {
+  if (!selectedQuizId) {
     return (
       <div className="container py-8">
         <Card className="w-full mx-auto">
@@ -355,7 +342,7 @@ export default function PretestPage() {
   }
 
   // Quiz error state
-  if (quizError) {
+  if (error) {
     return (
       <div className="container py-8">
         <div className="max-w-3xl mx-auto">
@@ -369,16 +356,16 @@ export default function PretestPage() {
               <CardTitle>Error Loading Pretest</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-center text-red-500">{quizError}</p>
+              <p className="text-center text-red-500">{error}</p>
               <p className="text-center mt-2">
-                {quizError.includes("Failed to fetch question") ||
-                quizError.includes("missing answer options")
+                {error.includes("Failed to fetch question") ||
+                error.includes("missing answer options")
                   ? "There appears to be an issue with one or more questions in this pretest. The server may be experiencing problems or the quiz data may be incomplete."
                   : "Please try again or select a different pretest."}
               </p>
               <div className="flex justify-center mt-4">
                 <Button
-                  onClick={() => handleQuizSelect(selectedQuiz.id)}
+                  onClick={() => handleQuizSelect(selectedQuizId)}
                   className="mr-2"
                 >
                   Try Again
