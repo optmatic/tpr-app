@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   AudioWaveform,
   BookOpen,
@@ -18,30 +18,30 @@ import {
   Notebook,
   NotebookPen,
   UserRound,
-  Upload
-} from "lucide-react"
+  Upload,
+} from "lucide-react";
 
-import Logo from "/public/tutorpro-logo.svg"
+import Logo from "/public/tutorpro-logo.svg";
 
-
-import { NavMain } from "@/components/nav-main"
-import { SimpleNav } from "@/components/simple-nav"
-import { NavUser } from "@/components/nav-user"
-import { TeamSwitcher } from "@/components/team-switcher"
+import { NavMain } from "@/components/nav-main";
+import { SimpleNav } from "@/components/simple-nav";
+import { NavUser } from "@/components/nav-user";
+import { TeamSwitcher } from "@/components/team-switcher";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   // SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 // This is sample data.
 const data = {
   user: {
     name: "admin",
     email: "admin@tpr.com",
-    avatar: "https://www.optmatic.com/_next/static/media/optmatic-logo.5155a03d.svg",
+    avatar:
+      "https://www.optmatic.com/_next/static/media/optmatic-logo.5155a03d.svg",
   },
   teams: [
     {
@@ -59,7 +59,6 @@ const data = {
       logo: AudioWaveform,
       plan: "student",
     },
-    
   ],
 
   menus: [
@@ -91,7 +90,6 @@ const data = {
           url: "/student-results",
           icon: NotebookPen,
         },
-        
       ],
     },
     {
@@ -113,7 +111,7 @@ const data = {
           icon: NotebookPen,
         },
         {
-          name:"Learning Resources",
+          name: "Learning Resources",
           url: "/learning-resources",
           icon: BookOpen,
         },
@@ -124,24 +122,24 @@ const data = {
       label: "Student",
       items: [
         {
-          name: "Assessment",
-          url: "/assessment",
+          name: "Pretests",
+          url: "/pretest",
           icon: Notebook,
         },
         {
-          name:"Your Results",
+          name: "Your Results",
           url: "/your-results",
           icon: PieChart,
         },
         {
-          name:"Learning Resources",
+          name: "Learning Resources",
           url: "/learning-resources",
           icon: BookOpen,
         },
       ],
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -149,7 +147,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <div className="p-4">
           <a href="/dashboard">
-            <img src={Logo.src} alt="TutorPro Logo" className="w-[180px] h-[80px]" />
+            <img
+              src={Logo.src}
+              alt="TutorPro Logo"
+              className="w-[180px] h-[80px]"
+            />
           </a>
         </div>
         {data.menus.map((menu) => (
@@ -162,5 +164,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

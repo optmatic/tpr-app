@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
 import QuizTaker from "./_components/QuizTaker"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import QuizTakerWrapper from "./_components/QuizTakerWrapper"
 
 export default function AssessmentPage() {
   const [quizzes, setQuizzes] = useState<any[]>([])
@@ -122,7 +123,7 @@ export default function AssessmentPage() {
               Back to Quizzes
             </Button>
           </div>
-          <QuizTaker quiz={selectedQuiz} />
+          <QuizTakerWrapper quizId={selectedQuiz.id} />
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,174 +9,166 @@ import {
   CardContent, 
   CardFooter, 
   CardHeader, 
-  CardTitle 
+  CardTitle,
+  CardDescription
 } from "@/app/assessment/_components/card"
+import { Quiz, Question, Answer } from "@/lib/types"
 
-// Define types locally since there's an issue with importing
-interface AnswerProps {
-  id?: string | number;
-  text: string;
-  isCorrect?: boolean;
+// Transform function with proper typing
+function transformToUIQuiz(quiz: any): Quiz {
+  if (!quiz) return {} as Quiz;
+  
+  return {
+    id: quiz.id,
+    title: quiz.title,
+    questions: Array.isArray(quiz.questions) ? quiz.questions.map((q: any) => ({
+      id: q.id,
+      text: q.text || `Question ${q.id}`,
+      type: q.type || 'multiple-choice',
+      orderIndex: q.orderIndex || 0,
+      quizId: q.quizId || quiz.id,
+      updatedAt: quiz.updatedAt,
+      correctAnswer: q.answers?.find((a: any) => a.isCorrect)?.text || '',
+      answers: Array.isArray(q.answers) ? q.answers.map((a: any) => ({
+        id: a.id,
+        text: a.text || '',
+        isCorrect: a.isCorrect || false,
+        questionId: a.questionId || q.id
+      })) : []
+    })) : [],
+    author: quiz.author,
+    updatedAt: quiz.updatedAt
+  }
 }
 
-interface QuestionProps {
+// Define a more flexible question type for our component
+interface QuizQuestion {
   id: string | number;
   text: string;
-  type?: string;
-  answers?: AnswerProps[];
-  correctAnswer?: string;
+  type: "multiple-choice" | "short-answer";
+  answers: Answer[];
+  correctAnswer: string;
+  orderIndex?: number;
+  quizId?: number;
+  updatedAt?: Date;
 }
 
-interface QuizProps {
-  id?: string | number;
-  title?: string;
-  description?: string;
-  questions?: QuestionProps[];
-  quiz?: {
-    id?: string | number;
-    title?: string;
-    questions?: QuestionProps[];
-  };
-}
-
-export default function QuizTaker(props: any) {
+export default function QuizTaker({ quiz, title: propTitle }: { quiz?: Quiz, title?: string }) {
+  console.log("==================== QUIZ TAKER COMPONENT ====================")
+  console.log("QuizTaker received quiz:", JSON.stringify(quiz, null, 2))
+  console.log("QuizTaker received questions:", JSON.stringify(quiz?.questions, null, 2))
+  
   // Handle different quiz data structures
-  const quizData = props.quiz || props;
-  const title = quizData.title || quizData.quiz?.title || "Untitled Quiz";
-  const questions = quizData.questions || quizData.quiz?.questions || [];
+  const title = propTitle || quiz?.title || "Untitled Quiz";
+  const questions = quiz?.questions || [];
   
-  console.log("QuizTaker received:", props);
-  console.log("Processed quiz data:", { title, questions });
+  console.log("QuizTaker received:", { title, questions });
   
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
-  const [userAnswers, setUserAnswers] = useState<string[]>(
-    Array(questions.length || 0).fill("")
-  )
-  const [showResults, setShowResults] = useState(false)
-  const [loadingQuestions, setLoadingQuestions] = useState(false)
-  const [fullQuestions, setFullQuestions] = useState<QuestionProps[]>([])
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [userAnswers, setUserAnswers] = useState<string[]>(Array(questions.length).fill(''));
+  const [showResults, setShowResults] = useState(false);
   
-  useEffect(() => {
-    if (!questions.length) return;
-    
-    // Create placeholder questions with better defaults
-    const processedQuestions = questions.map((q: any, index: number) => ({
-      id: q.id || index,
-      text: q.text || `Question ${index + 1}`,
-      type: q.type || "short-answer",
-      answers: q.answers || []
-    }));
-    
-    setFullQuestions(processedQuestions);
-  }, [questions]);
-
-  // If there are no questions, show a message
-  if (!questions.length) {
-    return (
-      <Card className="w-full mx-auto">
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-muted-foreground">
-            No questions available for this quiz.
-          </p>
-        </CardContent>
-      </Card>
-    )
-  }
+  // Ensure we have valid questions to work with
+  const questionsToUse: QuizQuestion[] = questions.length > 0 ? questions.map((q: Question) => ({
+    ...q,
+    text: q.text || `Question ${q.id}`, // Use text if available, otherwise fallback to ID
+    correctAnswer: q.answers?.find(a => a.isCorrect)?.text || '',
+    orderIndex: q.orderIndex || 0,
+    quizId: q.quizId || 0,
+    updatedAt: q.updatedAt || new Date()
+  })) : [
+    { 
+      id: 0, 
+      text: "No questions available", 
+      type: "short-answer", 
+      answers: [], 
+      correctAnswer: '',
+      orderIndex: 0,
+      quizId: 0,
+      updatedAt: new Date()
+    }
+  ];
   
-  if (loadingQuestions) {
-    return (
-      <Card className="w-full mx-auto">
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center">Loading questions...</p>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  const questionsToUse = fullQuestions.length > 0 ? fullQuestions : questions;
-  const currentQuestion = questionsToUse[currentQuestionIndex] || {
-    text: `Question ${currentQuestionIndex + 1}`,
-    answers: []
-  };
-
-  const handleAnswer = (answer: string) => {
+  console.log("Questions to use:", questionsToUse);
+  
+  const currentQuestion = questionsToUse[currentQuestionIndex];
+  console.log("Current question:", currentQuestion);
+  
+  // Handle user answering a question
+  const handleAnswer = (value: string) => {
     const newAnswers = [...userAnswers];
-    newAnswers[currentQuestionIndex] = answer;
+    newAnswers[currentQuestionIndex] = value;
     setUserAnswers(newAnswers);
-  }
-
-  const calculateScore = () => {
-    let score = 0;
-    questionsToUse.forEach((question: any, index: number) => {
-      const userAnswer = userAnswers[index];
+  };
+  
+  // Calculate results
+  const calculateResults = () => {
+    let correctCount = 0;
+    
+    questionsToUse.forEach((question, index) => {
+      const userAnswer = userAnswers[index]?.trim().toLowerCase();
+      const correctAnswer = question.correctAnswer?.trim().toLowerCase();
       
-      if (question.answers?.length > 0) {
-        // Multiple choice question
-        const correctAnswer = question.answers.find((a: any) => a.isCorrect);
-        if (correctAnswer && userAnswer === correctAnswer.text) {
-          score++;
-        }
-      } else if (question.correctAnswer) {
-        // Short answer question
-        if (userAnswer.toLowerCase().trim() === question.correctAnswer.toLowerCase().trim()) {
-          score++;
-        }
+      if (userAnswer && correctAnswer && userAnswer === correctAnswer) {
+        correctCount++;
       }
     });
     
-    return `${score}/${questionsToUse.length}`;
-  }
-
+    return {
+      total: questionsToUse.length,
+      correct: correctCount,
+      percentage: Math.round((correctCount / questionsToUse.length) * 100)
+    };
+  };
+  
+  // Show results screen
   if (showResults) {
+    const results = calculateResults();
+    
     return (
       <Card className="w-full mx-auto">
         <CardHeader>
-          <CardTitle>Quiz Results</CardTitle>
+          <CardTitle>Quiz Results: {title}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center space-y-4">
-            <p className="text-2xl font-bold">Score: {calculateScore()}</p>
-            <Button
-              onClick={() => {
-                setShowResults(false);
-                setCurrentQuestionIndex(0);
-                setUserAnswers(Array(questionsToUse.length).fill(""));
-              }}
-            >
-              Retake Quiz
-            </Button>
+            <div className="text-4xl font-bold">
+              {results.correct} / {results.total}
+            </div>
+            <div className="text-2xl">
+              {results.percentage}%
+            </div>
+            <div className="pt-4">
+              <Button onClick={() => setShowResults(false)}>
+                Review Answers
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
- 
+  
   return (
     <Card className="w-full mx-auto">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
+        <CardDescription>
+          Question {currentQuestionIndex + 1} of {questionsToUse.length}
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="text-sm text-muted-foreground">
-            Question {currentQuestionIndex + 1} of {questionsToUse.length}
-          </div>
-          <h2 className="text-xl font-semibold">
-            {currentQuestion?.text || `Question ${currentQuestionIndex + 1}`}
-          </h2>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <h3 className="text-lg font-medium">
+            {currentQuestion.text}
+          </h3>
           
-          {currentQuestion?.answers?.length > 0 ? (
+          {currentQuestion.type === 'multiple-choice' && currentQuestion.answers?.length > 0 ? (
             <RadioGroup 
               value={userAnswers[currentQuestionIndex]} 
               onValueChange={handleAnswer}
             >
-              {currentQuestion.answers.map((answer: any, index: number) => (
+              {currentQuestion.answers.map((answer, index) => (
                 <div 
                   key={index} 
                   className="flex items-center space-x-2 border p-4 rounded-lg hover:bg-accent"

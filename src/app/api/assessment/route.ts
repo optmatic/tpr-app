@@ -7,31 +7,38 @@ export async function GET(request: Request) {
     const idParam = searchParams.get('id')
     
     if (!idParam) {
-      return NextResponse.json({ error: 'Question ID is required' }, { status: 400 })
+      return NextResponse.json({ error: 'Quiz ID is required' }, { status: 400 })
     }
     
     const id = parseInt(idParam)
     
     if (isNaN(id)) {
-      return NextResponse.json({ error: 'Invalid question ID' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid quiz ID' }, { status: 400 })
     }
     
-    const question = await prisma.question.findUnique({
+    const quiz = await prisma.quiz.findUnique({
       where: { id },
       include: {
-        answers: true
+        questions: {
+          include: {
+            answers: true
+          },
+          orderBy: {
+            orderIndex: 'asc'
+          }
+        }
       }
     })
     
-    if (!question) {
-      return NextResponse.json({ error: 'Question not found' }, { status: 404 })
+    if (!quiz) {
+      return NextResponse.json({ error: 'Quiz not found' }, { status: 404 })
     }
     
-    return NextResponse.json(question)
+    return NextResponse.json(quiz)
   } catch (error) {
-    console.error('Error fetching question:', error)
+    console.error('Error fetching quiz:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch question' },
+      { error: 'Failed to fetch quiz' },
       { status: 500 }
     )
   }
