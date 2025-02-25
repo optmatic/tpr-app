@@ -1,3 +1,51 @@
+export type Question = {
+  type: "multiple-choice" | "short-answer"
+  updatedAt: Date
+  id: number | string
+  text: string
+  orderIndex: number
+  quizId: number
+  options?: string[]
+  correctAnswer: string
+  answers: Answer[]
+}
+
+  // export interface QuizTakerProps {
+  //   id: number;
+  //   title: string;
+  //   description?: string;
+  //   questions: QuestionProps[];
+  //   createdAt?: string;
+  //   updatedAt?: string;
+  // }
+
+  export interface QuizTakerProps {
+    title: string
+    quiz: Quiz;
+    questions: QuestionProps[];
+    currentQuestionIndex: number;
+    userAnswers: string[];
+    showResults: boolean;
+    loadingQuestions: boolean;
+    fullQuestions: QuestionProps[];
+    handleAnswer: (answer: string) => void;
+    calculateScore: () => number;
+  }
+
+export interface QuestionProps {
+  id: number;
+  text: string;
+  type?: string;
+  answers?: AnswerProps[];
+  correctAnswer?: string;
+}
+
+export interface AnswerProps {
+  id?: number;
+  text: string;
+  isCorrect?: boolean;
+}
+
 export type Resource = {
   id: number
   title: string
@@ -25,20 +73,7 @@ export type UploadedFile = {
 export type Answer = {
   id: number
   text: string
-
   isCorrect: boolean
-}
-
-export type Question = {
-  updatedAt: Date
-  id: number | string
-  text: string
-  orderIndex: number
-  quizId: number
-  type: "multiple-choice" | "short-answer"
-  options?: string[]
-  correctAnswer: string
-  answers: Answer[]
 }
 
 export type Quiz = {

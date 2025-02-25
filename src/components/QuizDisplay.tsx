@@ -4,6 +4,9 @@ import { ArrowLeft, Edit } from "lucide-react"
 import { QuizDisplayProps } from "@/lib/types"
 
 export default function QuizDisplay({ quiz, onBack, onEditQuiz }: QuizDisplayProps) {
+  console.log("==================== QUIZ DISPLAY COMPONENT ====================")
+  console.log("QuizDisplay received quiz:", JSON.stringify(quiz, null, 2))
+  console.log("Quiz questions:", quiz?.questions)
     const handleEdit = (id: string) => {
     onEditQuiz(id)
   }
