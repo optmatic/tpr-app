@@ -45,7 +45,14 @@ export default function PretestClient({
   const [selectedQuiz, setSelectedQuiz] = useState<QuizWithRelations | null>(
     null
   );
-  const [view, setView] = useState<"list" | "edit" | "display">("list");
+  const [view, setView] = useState<"list" | "edit" | "display" | "take">(
+    "list"
+  );
+  const [quizResults, setQuizResults] = useState<{
+    total: number;
+    correct: number;
+    percentage: number;
+  } | null>(null);
 
   const transformedQuizzes = initialQuizzes.map(transformToUIQuiz);
   const [quizzes] = useState(
@@ -108,6 +115,19 @@ export default function PretestClient({
     }
   };
 
+  const handleTakeQuiz = () => {
+    setView("take");
+    setQuizResults(null);
+  };
+
+  const handleQuizComplete = (results: {
+    total: number;
+    correct: number;
+    percentage: number;
+  }) => {
+    setQuizResults(results);
+  };
+
   return (
     <main className="mx-auto p-4">
       <h1>Pretest list</h1>
@@ -126,6 +146,12 @@ export default function PretestClient({
           }}
           onBack={() => setView("list")}
         />
+      ) : view === "take" && selectedQuiz ? (
+        <PretestTaker
+          quiz={transformToUIQuiz(selectedQuiz)}
+          onComplete={handleQuizComplete}
+          onBack={() => setView("display")}
+        />
       ) : selectedQuiz ? (
         <QuizDisplay
           onEditQuiz={(id: string) => {
@@ -137,6 +163,7 @@ export default function PretestClient({
           }}
           quiz={transformToUIQuiz(selectedQuiz)}
           onBack={() => setSelectedQuiz(null)}
+          onTakeQuiz={handleTakeQuiz}
         />
       ) : (
         <QuizList

@@ -166,7 +166,27 @@ export default function PretestTaker({
   }
 
   // Quiz taking view
-  const currentQuestion = quiz.questions[currentQuestionIndex];
+  if (quiz && !showResults) {
+    return (
+      <div className="container py-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="mb-4">
+            <Button variant="outline" onClick={onBack}>
+              Back to Pretests
+            </Button>
+          </div>
+          <PretestTaker
+            quiz={quiz}
+            onComplete={(results) => {
+              setShowResults(true);
+              // Store results or perform other actions
+            }}
+            onBack={onBack}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Card className="w-full mx-auto">
@@ -178,28 +198,35 @@ export default function PretestTaker({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <h3 className="text-lg font-medium">{currentQuestion.text}</h3>
+          <h3 className="text-lg font-medium">
+            {quiz.questions[currentQuestionIndex].text}
+          </h3>
 
-          {currentQuestion.type === "multiple-choice" &&
-          currentQuestion.answers?.length > 0 ? (
+          {quiz.questions[currentQuestionIndex].type === "multiple-choice" &&
+          quiz.questions[currentQuestionIndex].answers?.length > 0 ? (
             <RadioGroup
               value={userAnswers[currentQuestionIndex]}
               onValueChange={handleAnswer}
             >
-              {currentQuestion.answers.map((answer, index) => (
-                <div
-                  key={index}
-                  className="flex items-center space-x-2 border p-4 rounded-lg hover:bg-accent"
-                >
-                  <RadioGroupItem value={answer.text} id={`option-${index}`} />
-                  <Label
-                    htmlFor={`option-${index}`}
-                    className="flex-grow cursor-pointer"
+              {quiz.questions[currentQuestionIndex].answers.map(
+                (answer, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center space-x-2 border p-4 rounded-lg hover:bg-accent"
                   >
-                    {answer.text}
-                  </Label>
-                </div>
-              ))}
+                    <RadioGroupItem
+                      value={answer.text}
+                      id={`option-${index}`}
+                    />
+                    <Label
+                      htmlFor={`option-${index}`}
+                      className="flex-grow cursor-pointer"
+                    >
+                      {answer.text}
+                    </Label>
+                  </div>
+                )
+              )}
             </RadioGroup>
           ) : (
             <Input
