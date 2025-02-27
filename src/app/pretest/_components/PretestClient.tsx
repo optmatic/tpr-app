@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import QuizCreator from "@/components/QuizCreator";
 import QuizList from "@/components/QuizList";
 import { Button } from "@/components/ui/button";
-import QuizDisplay from "@/components/QuizDisplay";
+import QuizDisplay from "./PretestDisplay";
+import PretestTaker from "./PretestTaker";
 import type { Quiz, QuizWithRelations } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import QuizEditor from "@/components/QuizEditor";
-import QuizCreator from "@/components/QuizCreator";
 
 // Updated transform function to match types
 function transformToUIQuiz(quiz: QuizWithRelations): Quiz {
@@ -34,7 +35,7 @@ function transformToUIQuiz(quiz: QuizWithRelations): Quiz {
   };
 }
 
-export default function QuizListClient({
+export default function PretestClient({
   initialQuizzes,
 }: {
   initialQuizzes: QuizWithRelations[];
@@ -109,11 +110,11 @@ export default function QuizListClient({
 
   return (
     <main className="mx-auto p-4">
-      <h1>Quiz List</h1>
+      <h1>Pretest list</h1>
       {showQuizCreator ? (
         <>
           <Button onClick={() => setShowQuizCreator(false)} className="mb-4">
-            Back to Quiz List
+            Back to Pretest List
           </Button>
           <QuizCreator />
         </>
