@@ -1,9 +1,12 @@
-import { prisma } from "@/lib/prisma"
-import QuizListClient from "@/components/QuizListClient"
-import type { QuizWithRelations } from "@/lib/types"
+import { prisma } from "@/lib/prisma";
+import QuizListClient from "@/components/QuizListClient";
+import type { QuizWithRelations } from "@/lib/types";
 
 export default async function QuizListPage() {
-  const quizzes = await prisma.quiz.findMany({
+  // Log the quizzes before fetching to track execution
+  console.log("Fetching quizzes...");
+
+  const quizzes = (await prisma.quiz.findMany({
     include: {
       author: true,
       questions: {
@@ -13,11 +16,15 @@ export default async function QuizListPage() {
           quizId: true,
           orderIndex: true,
           answers: true,
-        }
-      }
+        },
+      },
     },
-  }) satisfies QuizWithRelations[]
+    orderBy: {
+      createdAt: "desc", // Optional: show newest quizzes first
+    },
+  })) satisfies QuizWithRelations[];
 
-  return <QuizListClient initialQuizzes={quizzes} />
+  console.log("Quizzes fetched successfully:", quizzes.length);
+
+  return <QuizListClient initialQuizzes={quizzes} />;
 }
-
