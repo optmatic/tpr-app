@@ -9,6 +9,7 @@ import PretestTaker from "./PretestTaker";
 import type { Quiz, QuizWithRelations } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import QuizEditor from "@/components/QuizEditor";
+import { Toaster } from "@/components/ui/sonner";
 
 // Updated transform function to match types
 function transformToUIQuiz(quiz: QuizWithRelations): Quiz {
@@ -132,6 +133,7 @@ export default function PretestClient({
 
   return (
     <main className="mx-auto p-4">
+      <Toaster position="top-center" richColors closeButton />
       <h1>Pretest list</h1>
       {showQuizCreator ? (
         <>

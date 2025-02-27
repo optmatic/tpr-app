@@ -158,14 +158,19 @@ export default function PretestTaker({
       );
       console.log("Quiz results saved to localStorage");
 
-      // Show success notification with Sonner
-      toast("Quiz Submitted Successfully", {
-        description: `Your score: ${results.correct}/${results.total} (${results.percentage}%)`,
-      });
+      // Show success notification with Sonner - using setTimeout to ensure it happens after state update
+      setTimeout(() => {
+        toast.success("Quiz Submitted Successfully", {
+          description: `Your score: ${results.correct}/${results.total} (${results.percentage}%)`,
+          duration: 5000, // Show for 5 seconds
+        });
+        console.log("Toast notification triggered");
+      }, 100);
     } catch (error) {
       console.error("Error saving quiz results:", error);
       toast.error("Error Saving Results", {
         description: "There was a problem saving your quiz results.",
+        duration: 5000,
       });
     }
 
@@ -181,29 +186,26 @@ export default function PretestTaker({
     const results = calculateResults();
 
     return (
-      <>
-        <Toaster />
-        <Card className="w-full mx-auto">
-          <CardHeader>
-            <CardTitle>Quiz Results: {quiz.title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center space-y-4">
-              <div className="text-4xl font-bold">
-                {results.correct} / {results.total}
-              </div>
-              <div className="text-2xl">{results.percentage}%</div>
-              <div className="pt-4 flex justify-center gap-4">
-                {onBack && (
-                  <Button variant="outline" onClick={onBack}>
-                    Back
-                  </Button>
-                )}
-              </div>
+      <Card className="w-full mx-auto">
+        <CardHeader>
+          <CardTitle>Quiz Results: {quiz.title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center space-y-4">
+            <div className="text-4xl font-bold">
+              {results.correct} / {results.total}
             </div>
-          </CardContent>
-        </Card>
-      </>
+            <div className="text-2xl">{results.percentage}%</div>
+            <div className="pt-4 flex justify-center gap-4">
+              {onBack && (
+                <Button variant="outline" onClick={onBack}>
+                  Back
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -215,68 +217,65 @@ export default function PretestTaker({
   );
 
   return (
-    <>
-      <Toaster />
-      <Card className="w-full mx-auto">
-        <CardHeader>
-          <CardTitle>{quiz.title}</CardTitle>
-          <CardDescription>
-            Answer all questions to complete the quiz
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          {uniqueQuestions.map((question, index) => (
-            <div key={question.id} className="space-y-4 border-b pb-6">
-              <h3 className="text-lg font-medium">
-                {index + 1}. {question.text}
-              </h3>
+    <Card className="w-full mx-auto">
+      <CardHeader>
+        <CardTitle>{quiz.title}</CardTitle>
+        <CardDescription>
+          Answer all questions to complete the quiz
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-8">
+        {uniqueQuestions.map((question, index) => (
+          <div key={question.id} className="space-y-4 border-b pb-6">
+            <h3 className="text-lg font-medium">
+              {index + 1}. {question.text}
+            </h3>
 
-              {question.type === "multiple-choice" &&
-              question.answers?.length > 0 ? (
-                <RadioGroup
-                  value={userAnswers[index]}
-                  onValueChange={(value) => handleAnswer(index, value)}
-                >
-                  {question.answers.map((answer, ansIndex) => (
-                    <div
-                      key={ansIndex}
-                      className="flex items-center space-x-2 border p-4 rounded-lg hover:bg-accent"
+            {question.type === "multiple-choice" &&
+            question.answers?.length > 0 ? (
+              <RadioGroup
+                value={userAnswers[index]}
+                onValueChange={(value) => handleAnswer(index, value)}
+              >
+                {question.answers.map((answer, ansIndex) => (
+                  <div
+                    key={ansIndex}
+                    className="flex items-center space-x-2 border p-4 rounded-lg hover:bg-accent"
+                  >
+                    <RadioGroupItem
+                      value={answer.text}
+                      id={`question-${index}-option-${ansIndex}`}
+                    />
+                    <Label
+                      htmlFor={`question-${index}-option-${ansIndex}`}
+                      className="flex-grow cursor-pointer"
                     >
-                      <RadioGroupItem
-                        value={answer.text}
-                        id={`question-${index}-option-${ansIndex}`}
-                      />
-                      <Label
-                        htmlFor={`question-${index}-option-${ansIndex}`}
-                        className="flex-grow cursor-pointer"
-                      >
-                        {answer.text}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              ) : (
-                <Input
-                  value={userAnswers[index]}
-                  onChange={(e) => handleAnswer(index, e.target.value)}
-                  placeholder="Type your answer..."
-                />
-              )}
-            </div>
-          ))}
-
-          <div className="flex justify-between pt-6">
-            {onBack && (
-              <Button variant="outline" onClick={onBack}>
-                <ChevronLeft className="w-4 h-4 mr-2" /> Back
-              </Button>
+                      {answer.text}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            ) : (
+              <Input
+                value={userAnswers[index]}
+                onChange={(e) => handleAnswer(index, e.target.value)}
+                placeholder="Type your answer..."
+              />
             )}
-            <Button onClick={handleComplete} disabled={!allQuestionsAnswered}>
-              Submit Quiz
-            </Button>
           </div>
-        </CardContent>
-      </Card>
-    </>
+        ))}
+
+        <div className="flex justify-between pt-6">
+          {onBack && (
+            <Button variant="outline" onClick={onBack}>
+              <ChevronLeft className="w-4 h-4 mr-2" /> Back
+            </Button>
+          )}
+          <Button onClick={handleComplete} disabled={!allQuestionsAnswered}>
+            Submit Quiz
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
