@@ -70,6 +70,7 @@ export default function PretestClient({
     const originalQuiz = initialQuizzes.find((q) => q.id === Number(quizId));
     if (originalQuiz) {
       setSelectedQuiz(originalQuiz);
+      setView("display");
     }
   };
 
@@ -124,6 +125,9 @@ export default function PretestClient({
     percentage: number;
   }) => {
     setQuizResults(results);
+    // After completing the quiz, go back to the list view
+    setView("list");
+    setSelectedQuiz(null);
   };
 
   return (
@@ -150,7 +154,7 @@ export default function PretestClient({
           onComplete={handleQuizComplete}
           onBack={() => setView("display")}
         />
-      ) : selectedQuiz ? (
+      ) : view === "display" && selectedQuiz ? (
         <QuizDisplay
           onEditQuiz={(id: string) => {
             const quiz = initialQuizzes.find((q) => q.id === Number(id));
@@ -160,7 +164,10 @@ export default function PretestClient({
             }
           }}
           quiz={transformToUIQuiz(selectedQuiz)}
-          onBack={() => setSelectedQuiz(null)}
+          onBack={() => {
+            setSelectedQuiz(null);
+            setView("list");
+          }}
           onTakeQuiz={handleTakeQuiz}
         />
       ) : (

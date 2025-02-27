@@ -10,18 +10,10 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { ChevronLeft } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Quiz, Question, Answer } from "@/lib/types";
+import { Quiz } from "@/lib/types";
 
 // Type-safe transform function
 function transformToUIQuiz(quiz: {
@@ -87,21 +79,33 @@ export default function PretestTaker({
   onComplete,
   onBack,
 }: PretestTakerProps) {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  console.log("PretestTaker rendering with quiz:", quiz.title);
+  console.log("Questions count:", quiz.questions.length);
+  console.log("Question IDs:", quiz.questions.map((q) => q.id).join(", "));
+
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [allQuestionsAnswered, setAllQuestionsAnswered] = useState(false);
 
   // Initialize userAnswers array with empty strings
   useEffect(() => {
+    console.log("Quiz changed, resetting state for quiz:", quiz.title);
     setUserAnswers(Array(quiz.questions.length).fill(""));
-    setCurrentQuestionIndex(0);
     setShowResults(false);
+    setAllQuestionsAnswered(false);
   }, [quiz]);
 
+  // Check if all questions have been answered
+  useEffect(() => {
+    const answered = userAnswers.every((answer) => answer.trim() !== "");
+    setAllQuestionsAnswered(answered);
+  }, [userAnswers]);
+
   // Handle user answering a question
-  const handleAnswer = (value: string) => {
+  const handleAnswer = (index: number, value: string) => {
+    console.log(`Answering question ${index} with value: ${value}`);
     const newAnswers = [...userAnswers];
-    newAnswers[currentQuestionIndex] = value;
+    newAnswers[index] = value;
     setUserAnswers(newAnswers);
   };
 
@@ -127,16 +131,17 @@ export default function PretestTaker({
 
   // Handle quiz completion
   const handleComplete = () => {
+    console.log("Quiz completed, showing results");
     setShowResults(true);
     const results = calculateResults();
 
     // Save results to localStorage
     const quizResult = {
-      id: Date.now().toString(), // Generate a unique ID
-      studentName: "Current Student", // You might want to get this from user context
+      id: Date.now().toString(),
+      studentName: "Current Student",
       quizName: quiz.title,
       score: `${results.correct}/${results.total} (${results.percentage}%)`,
-      date: new Date().toISOString().split("T")[0], // Format as YYYY-MM-DD
+      date: new Date().toISOString().split("T")[0],
     };
 
     try {
@@ -149,17 +154,20 @@ export default function PretestTaker({
         "quizResults",
         JSON.stringify([...existingResults, quizResult])
       );
+      console.log("Quiz results saved to localStorage");
     } catch (error) {
       console.error("Error saving quiz results:", error);
     }
 
     if (onComplete) {
+      console.log("Calling onComplete callback");
       onComplete(results);
     }
   };
 
   // Results view
   if (showResults) {
+    console.log("Rendering results view");
     const results = calculateResults();
 
     return (
@@ -174,9 +182,6 @@ export default function PretestTaker({
             </div>
             <div className="text-2xl">{results.percentage}%</div>
             <div className="pt-4 flex justify-center gap-4">
-              <Button onClick={() => setShowResults(false)}>
-                Review Answers
-              </Button>
               {onBack && (
                 <Button variant="outline" onClick={onBack}>
                   Back
@@ -189,70 +194,72 @@ export default function PretestTaker({
     );
   }
 
+  console.log("Rendering quiz view with", quiz.questions.length, "questions");
+
+  // Ensure we have unique questions by ID
+  const uniqueQuestions = Array.from(
+    new Map(quiz.questions.map((q) => [q.id, q])).values()
+  );
+
   return (
     <Card className="w-full mx-auto">
       <CardHeader>
         <CardTitle>{quiz.title}</CardTitle>
         <CardDescription>
-          Question {currentQuestionIndex + 1} of {quiz.questions.length}
+          Answer all questions to complete the quiz
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <h3 className="text-lg font-medium">
-            {quiz.questions[currentQuestionIndex].text}
-          </h3>
+      <CardContent className="space-y-8">
+        {uniqueQuestions.map((question, index) => (
+          <div key={question.id} className="space-y-4 border-b pb-6">
+            <h3 className="text-lg font-medium">
+              {index + 1}. {question.text}
+            </h3>
 
-          {quiz.questions[currentQuestionIndex].type === "multiple-choice" &&
-          quiz.questions[currentQuestionIndex].answers?.length > 0 ? (
-            <RadioGroup
-              value={userAnswers[currentQuestionIndex]}
-              onValueChange={handleAnswer}
-            >
-              {quiz.questions[currentQuestionIndex].answers.map(
-                (answer, index) => (
+            {question.type === "multiple-choice" &&
+            question.answers?.length > 0 ? (
+              <RadioGroup
+                value={userAnswers[index]}
+                onValueChange={(value) => handleAnswer(index, value)}
+              >
+                {question.answers.map((answer, ansIndex) => (
                   <div
-                    key={index}
+                    key={ansIndex}
                     className="flex items-center space-x-2 border p-4 rounded-lg hover:bg-accent"
                   >
                     <RadioGroupItem
                       value={answer.text}
-                      id={`option-${index}`}
+                      id={`question-${index}-option-${ansIndex}`}
                     />
                     <Label
-                      htmlFor={`option-${index}`}
+                      htmlFor={`question-${index}-option-${ansIndex}`}
                       className="flex-grow cursor-pointer"
                     >
                       {answer.text}
                     </Label>
                   </div>
-                )
-              )}
-            </RadioGroup>
-          ) : (
-            <Input
-              value={userAnswers[currentQuestionIndex]}
-              onChange={(e) => handleAnswer(e.target.value)}
-              placeholder="Type your answer..."
-            />
+                ))}
+              </RadioGroup>
+            ) : (
+              <Input
+                value={userAnswers[index]}
+                onChange={(e) => handleAnswer(index, e.target.value)}
+                placeholder="Type your answer..."
+              />
+            )}
+          </div>
+        ))}
+
+        <div className="flex justify-between pt-6">
+          {onBack && (
+            <Button variant="outline" onClick={onBack}>
+              <ChevronLeft className="w-4 h-4 mr-2" /> Back
+            </Button>
           )}
-        </div>
-      </CardContent>
-      <CardContent className="flex justify-between pt-6">
-        <Button
-          variant="outline"
-          onClick={() => setCurrentQuestionIndex((i) => i - 1)}
-          disabled={currentQuestionIndex === 0}
-        >
-          <ChevronLeft className="w-4 h-4 mr-2" /> Previous
-        </Button>
-        {currentQuestionIndex === quiz.questions.length - 1 ? (
-          <Button onClick={handleComplete}>Submit Quiz</Button>
-        ) : (
-          <Button onClick={() => setCurrentQuestionIndex((i) => i + 1)}>
-            Next <ChevronRight className="w-4 h-4 ml-2" />
+          <Button onClick={handleComplete} disabled={!allQuestionsAnswered}>
+            Submit Quiz
           </Button>
-        )}
+        </div>
       </CardContent>
     </Card>
   );
