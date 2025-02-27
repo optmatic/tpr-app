@@ -129,6 +129,30 @@ export default function PretestTaker({
   const handleComplete = () => {
     setShowResults(true);
     const results = calculateResults();
+
+    // Save results to localStorage
+    const quizResult = {
+      id: Date.now().toString(), // Generate a unique ID
+      studentName: "Current Student", // You might want to get this from user context
+      quizName: quiz.title,
+      score: `${results.correct}/${results.total} (${results.percentage}%)`,
+      date: new Date().toISOString().split("T")[0], // Format as YYYY-MM-DD
+    };
+
+    try {
+      // Get existing results
+      const storedResults = localStorage.getItem("quizResults");
+      const existingResults = storedResults ? JSON.parse(storedResults) : [];
+
+      // Add new result and save back to localStorage
+      localStorage.setItem(
+        "quizResults",
+        JSON.stringify([...existingResults, quizResult])
+      );
+    } catch (error) {
+      console.error("Error saving quiz results:", error);
+    }
+
     if (onComplete) {
       onComplete(results);
     }
@@ -162,29 +186,6 @@ export default function PretestTaker({
           </div>
         </CardContent>
       </Card>
-    );
-  }
-
-  // Quiz taking view
-  if (quiz && !showResults) {
-    return (
-      <div className="container py-8">
-        <div className="max-w-3xl mx-auto">
-          <div className="mb-4">
-            <Button variant="outline" onClick={onBack}>
-              Back to Pretests
-            </Button>
-          </div>
-          <PretestTaker
-            quiz={quiz}
-            onComplete={(results) => {
-              setShowResults(true);
-              // Store results or perform other actions
-            }}
-            onBack={onBack}
-          />
-        </div>
-      </div>
     );
   }
 

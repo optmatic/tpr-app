@@ -54,19 +54,17 @@ export default function PretestClient({
     percentage: number;
   } | null>(null);
 
-  const transformedQuizzes = initialQuizzes.map(transformToUIQuiz);
-  const [quizzes] = useState(
-    transformedQuizzes.map((quiz) => ({
-      id: String(quiz.id),
-      title: quiz.title,
-      updatedAt: quiz.updatedAt,
-      questions: quiz.questions.map((q) => ({
-        id: String(q.id),
-        type: q.type,
-        question: q.text,
-      })),
-    }))
-  );
+  // Memoize the transformed quizzes with proper type annotation
+  const quizzes = initialQuizzes.map((quiz) => ({
+    id: String(quiz.id),
+    title: quiz.title,
+    updatedAt: quiz.updatedAt,
+    questions: quiz.questions.map((q) => ({
+      id: String(q.id),
+      type: "multiple-choice" as const, // Use const assertion to fix the type
+      question: q.text,
+    })),
+  }));
 
   const handleQuizSelect = (quizId: string) => {
     const originalQuiz = initialQuizzes.find((q) => q.id === Number(quizId));
