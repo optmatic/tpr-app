@@ -1,31 +1,48 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Edit, Trash2, Search } from "lucide-react"
-import { QuizListProps } from "@/lib/types"
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Search } from "lucide-react";
+import { QuizListProps } from "@/lib/types";
 
-export default function QuizList({ quizzes, onQuizSelect, isLoading, onArchiveQuiz, onEditQuiz }: QuizListProps) {
-  const [searchTerm, setSearchTerm] = useState("")
+export default function QuizList({
+  quizzes,
+  onQuizSelect,
+  isLoading,
+  onArchiveQuiz,
+  onEditQuiz,
+}: QuizListProps) {
+  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredQuizzes = quizzes
-    .filter((quiz) => quiz.title.toLowerCase().includes(searchTerm.toLowerCase()))
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .filter((quiz) =>
+      quiz.title.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
 
   const handleDelete = async (id: string) => {
     try {
-      await onArchiveQuiz(id)
+      await onArchiveQuiz(id);
     } catch (error) {
-      console.error('Failed to archive quiz:', error)
+      console.error("Failed to archive quiz:", error);
       // You might want to add toast notification here
     }
-  }
+  };
 
   const handleEdit = (id: string) => {
-    onEditQuiz(id)
-  }
+    onEditQuiz(id);
+  };
 
   return (
     <div className="space-y-4">
@@ -47,44 +64,25 @@ export default function QuizList({ quizzes, onQuizSelect, isLoading, onArchiveQu
             <TableRow>
               <TableHead>Title</TableHead>
               <TableHead>Questions</TableHead>
-              {/* <TableHead>Actions</TableHead> */}
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredQuizzes.map((quiz) => (
               <TableRow key={quiz.id} className="hover:bg-transparent">
-                <TableCell className="font-medium"><a onClick={() => onQuizSelect(quiz.id)} className="hover:text-blue-500 hover:cursor-pointer">{quiz.title}</a></TableCell>
+                <TableCell className="font-medium">
+                  <a
+                    onClick={() => onQuizSelect(quiz.id)}
+                    className="hover:text-link hover:underline hover:underline-offset-2 hover:cursor-pointer"
+                  >
+                    {quiz.title}
+                  </a>
+                </TableCell>
                 <TableCell>{quiz.questions.length}</TableCell>
-                {/* <TableCell>
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleEdit(quiz.id)
-                      }}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDelete(quiz.id)
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell> */}
               </TableRow>
             ))}
           </TableBody>
         </Table>
       )}
     </div>
-  )
+  );
 }
-

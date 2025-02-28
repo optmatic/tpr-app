@@ -10,7 +10,7 @@ import { Plus, Trash2 } from "lucide-react";
 type Question = {
   text: string;
   orderIndex: number;
-  type: "multiple-choice" | "short-answer";
+  type: "multiple-choice";
   answers: {
     text: string;
     isCorrect: boolean;
@@ -30,10 +30,7 @@ export default function QuizCreator() {
   const addQuestion = () => {
     if (
       currentQuestion.text &&
-      ((currentQuestion.type === "multiple-choice" &&
-        currentQuestion.answers.some((a) => a.text && a.isCorrect)) ||
-        (currentQuestion.type === "short-answer" &&
-          currentQuestion.answers[0]?.text))
+      currentQuestion.answers.some((a) => a.text && a.isCorrect)
     ) {
       setQuestions([
         ...questions,
@@ -82,10 +79,9 @@ export default function QuizCreator() {
       // Validate questions
       const validQuestions = questions.filter((q) => {
         const hasValidText = q.text.trim().length > 0;
-        const hasValidAnswer =
-          q.type === "multiple-choice"
-            ? q.answers.some((a) => a.text.trim() && a.isCorrect)
-            : q.answers[0]?.text.trim().length > 0;
+        const hasValidAnswer = q.answers.some(
+          (a) => a.text.trim() && a.isCorrect
+        );
 
         console.log("Question validation:", {
           text: q.text,
@@ -112,19 +108,12 @@ export default function QuizCreator() {
           text: q.text.trim(),
           orderIndex: q.orderIndex,
           type: q.type,
-          ...(q.type === "multiple-choice"
-            ? {
-                answers: q.answers
-                  .filter((a) => a.text.trim())
-                  .map((a) => ({
-                    text: a.text.trim(),
-                    isCorrect: a.isCorrect,
-                  })),
-              }
-            : {
-                correctAnswer: q.answers[0].text.trim(),
-                answers: [],
-              }),
+          answers: q.answers
+            .filter((a) => a.text.trim())
+            .map((a) => ({
+              text: a.text.trim(),
+              isCorrect: a.isCorrect,
+            })),
         })),
       };
 
@@ -189,36 +178,6 @@ export default function QuizCreator() {
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Add New Question</h2>
 
-        <div className="space-y-2">
-          <Label>
-            <span className="text-lg font-semibold">Question Type</span>
-          </Label>
-          <RadioGroup
-            value={currentQuestion.type}
-            onValueChange={(value: "multiple-choice" | "short-answer") => {
-              setCurrentQuestion({
-                ...currentQuestion,
-                type: value,
-                answers:
-                  value === "short-answer"
-                    ? [{ text: "", isCorrect: true }]
-                    : Array(4).fill({ text: "", isCorrect: false }),
-              });
-            }}
-          >
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="multiple-choice" id="multiple-choice" />
-                <Label htmlFor="multiple-choice">Multiple Choice</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="short-answer" id="short-answer" />
-                <Label htmlFor="short-answer">Short Answer</Label>
-              </div>
-            </div>
-          </RadioGroup>
-        </div>
-
         <div>
           <Label htmlFor="question">Question</Label>
           <Input
@@ -232,40 +191,28 @@ export default function QuizCreator() {
         </div>
 
         <div className="space-y-2">
-          <Label>
-            {currentQuestion.type === "multiple-choice"
-              ? "Options"
-              : "Correct Answer"}
-          </Label>
-          {currentQuestion.type === "multiple-choice" ? (
-            currentQuestion.answers.map((answer, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <Input
-                  value={answer.text}
-                  onChange={(e) => handleOptionChange(index, e.target.value)}
-                  placeholder={`Option ${index + 1}`}
-                />
-                <RadioGroup
-                  value={answer.isCorrect ? index.toString() : ""}
-                  onValueChange={() => handleCorrectAnswerChange(index)}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem
-                      value={index.toString()}
-                      id={`option-${index}`}
-                    />
-                    <Label htmlFor={`option-${index}`}>Correct</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            ))
-          ) : (
-            <Input
-              value={currentQuestion.answers[0]?.text || ""}
-              onChange={(e) => handleOptionChange(0, e.target.value)}
-              placeholder="Enter the correct answer"
-            />
-          )}
+          <Label>Options</Label>
+          {currentQuestion.answers.map((answer, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <Input
+                value={answer.text}
+                onChange={(e) => handleOptionChange(index, e.target.value)}
+                placeholder={`Option ${index + 1}`}
+              />
+              <RadioGroup
+                value={answer.isCorrect ? index.toString() : ""}
+                onValueChange={() => handleCorrectAnswerChange(index)}
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem
+                    value={index.toString()}
+                    id={`option-${index}`}
+                  />
+                  <Label htmlFor={`option-${index}`}>Correct</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          ))}
         </div>
 
         <Button onClick={addQuestion}>
@@ -291,41 +238,30 @@ export default function QuizCreator() {
               </Button>
             </div>
             <div className="space-y-2">
-              {q.type === "multiple-choice" ? (
-                <div className="bg-zinc-50 p-4 rounded-lg">
-                  <p className="text-sm font-semibold text-slate-700 mb-2">
-                    Option(s):
-                  </p>
-                  <ul className="space-y-2">
-                    {q.answers.map((answer, i) => (
-                      <li
-                        key={i}
-                        className={`flex items-center p-2 rounded ${
-                          answer.isCorrect
-                            ? "bg-green-100 text-green-700"
-                            : "bg-white border border-slate-200"
-                        }`}
-                      >
-                        {answer.text}{" "}
-                        {answer.isCorrect && (
-                          <span className="ml-2 text-sm font-medium">
-                            (Correct)
-                          </span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : (
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm font-semibold text-blue-700 mb-2">
-                    Short Answer
-                  </p>
-                  <p className="text-blue-700 font-medium pl-2">
-                    {q.answers[0]?.text}
-                  </p>
-                </div>
-              )}
+              <div className="bg-zinc-50 p-4 rounded-lg">
+                <p className="text-sm font-semibold text-slate-700 mb-2">
+                  Option(s):
+                </p>
+                <ul className="space-y-2">
+                  {q.answers.map((answer, i) => (
+                    <li
+                      key={i}
+                      className={`flex items-center p-2 rounded ${
+                        answer.isCorrect
+                          ? "bg-green-100 text-green-700"
+                          : "bg-white border border-slate-200"
+                      }`}
+                    >
+                      {answer.text}{" "}
+                      {answer.isCorrect && (
+                        <span className="ml-2 text-sm font-medium">
+                          (Correct)
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         ))}

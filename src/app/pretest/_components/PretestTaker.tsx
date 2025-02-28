@@ -24,11 +24,8 @@ function transformToUIQuiz(quiz: {
   questions: Array<{
     id: number;
     text: string;
-    type?: string;
-    orderIndex?: number;
     quizId: number;
     updatedAt?: string;
-    correctAnswer?: string;
     answers: Array<{
       id: number;
       text: string;
@@ -45,10 +42,8 @@ function transformToUIQuiz(quiz: {
     questions: quiz.questions.map((q) => ({
       id: q.id,
       text: q.text,
-      type: (q.type === "short-answer" ? "short-answer" : "multiple-choice") as
-        | "multiple-choice"
-        | "short-answer",
-      orderIndex: q.orderIndex || 0,
+      type: "multiple-choice",
+      orderIndex: 0,
       quizId: q.quizId,
       updatedAt: new Date(
         q.updatedAt || quiz.updatedAt || new Date().toISOString()
@@ -230,38 +225,28 @@ export default function PretestTaker({
             <h3 className="text-lg font-medium">
               {index + 1}. {question.text}
             </h3>
-
-            {question.type === "multiple-choice" &&
-            question.answers?.length > 0 ? (
-              <RadioGroup
-                value={userAnswers[index]}
-                onValueChange={(value) => handleAnswer(index, value)}
-              >
-                {question.answers.map((answer, ansIndex) => (
-                  <div
-                    key={ansIndex}
-                    className="flex items-center space-x-2 border p-4 rounded-lg hover:bg-accent"
+            <RadioGroup
+              value={userAnswers[index]}
+              onValueChange={(value) => handleAnswer(index, value)}
+            >
+              {question.answers.map((answer, ansIndex) => (
+                <div
+                  key={ansIndex}
+                  className="flex items-center space-x-2 border p-4 rounded-lg hover:bg-accent"
+                >
+                  <RadioGroupItem
+                    value={answer.text}
+                    id={`question-${index}-option-${ansIndex}`}
+                  />
+                  <Label
+                    htmlFor={`question-${index}-option-${ansIndex}`}
+                    className="flex-grow cursor-pointer"
                   >
-                    <RadioGroupItem
-                      value={answer.text}
-                      id={`question-${index}-option-${ansIndex}`}
-                    />
-                    <Label
-                      htmlFor={`question-${index}-option-${ansIndex}`}
-                      className="flex-grow cursor-pointer"
-                    >
-                      {answer.text}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            ) : (
-              <Input
-                value={userAnswers[index]}
-                onChange={(e) => handleAnswer(index, e.target.value)}
-                placeholder="Type your answer..."
-              />
-            )}
+                    {answer.text}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
           </div>
         ))}
 
