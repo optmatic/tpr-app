@@ -4,7 +4,7 @@ import { useState } from "react";
 import QuizCreator from "@/components/QuizCreator";
 import QuizList from "@/components/QuizList";
 import { Button } from "@/components/ui/button";
-import QuizDisplay from "./PretestDisplay";
+import PretestDisplay from "./PretestDisplay";
 import PretestTaker from "./PretestTaker";
 import type { Quiz, QuizWithRelations } from "@/lib/types";
 import { useRouter } from "next/navigation";
@@ -157,7 +157,7 @@ export default function PretestClient({
           onBack={() => setView("display")}
         />
       ) : view === "display" && selectedQuiz ? (
-        <QuizDisplay
+        <PretestDisplay
           onEditQuiz={(id: string) => {
             const quiz = initialQuizzes.find((q) => q.id === Number(id));
             if (quiz) {

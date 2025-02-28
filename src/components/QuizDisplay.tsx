@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Edit } from "lucide-react";
+import { ArrowLeft, Edit, Trash2 } from "lucide-react";
 import { QuizDisplayProps } from "@/lib/types";
 
 export default function QuizDisplay({
   quiz,
   onBack,
   onEditQuiz,
+  onDeleteQuiz,
 }: QuizDisplayProps) {
   console.log(
     "==================== QUIZ DISPLAY COMPONENT ===================="
@@ -17,22 +18,56 @@ export default function QuizDisplay({
     onEditQuiz(id);
   };
 
+  const handleDelete = (id: string) => {
+    if (window.confirm("Are you sure you want to archive this quiz?")) {
+      handleArchiveQuiz(id);
+    }
+  };
+
+  const handleArchiveQuiz = async (quizId: string) => {
+    try {
+      await fetch(`/api/quizzes/${quizId}/archive`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ archived: true }),
+      });
+      onBack();
+    } catch (error) {
+      console.error("Error archiving quiz:", error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <Button variant="ghost" onClick={onBack} className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Quiz List
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleEdit(quiz.id.toString());
-          }}
-        >
-          <Edit className="h-4 w-4" />
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit(quiz.id.toString());
+            }}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(quiz.id.toString());
+            }}
+            className="text-yellow-500 hover:text-yellow-700 hover:bg-yellow-100"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="flex justify-between items-center">

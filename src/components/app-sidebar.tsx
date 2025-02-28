@@ -19,6 +19,7 @@ import {
   NotebookPen,
   UserRound,
   Upload,
+  Archive,
 } from "lucide-react";
 
 import Logo from "/public/tutorpro-logo.svg";
@@ -74,6 +75,11 @@ const data = {
           name: "Quiz List",
           url: "/quiz-list",
           icon: ListCheck,
+        },
+        {
+          name: "Pretest Archive",
+          url: "/pretest-archive",
+          icon: Archive,
         },
         {
           name: "Upload Resource",

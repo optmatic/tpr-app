@@ -125,6 +125,7 @@ export type QuizDisplayProps = {
   quiz: Quiz;
   onBack: () => void;
   onEditQuiz: (quizId: string) => void;
+  onDeleteQuiz?: (quizId: string) => void;
 };
 
 export interface ResourceInfo {
