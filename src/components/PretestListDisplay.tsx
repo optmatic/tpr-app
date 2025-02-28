@@ -1,32 +1,34 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Edit, Trash2 } from "lucide-react";
-import { QuizDisplayProps } from "@/lib/types";
+import { PretestDisplayProps } from "@/lib/types";
 
-export default function QuizDisplay({
-  quiz,
+export default function PretestDisplay({
+  pretest,
   onBack,
-  onEditQuiz,
-  onDeleteQuiz,
-}: QuizDisplayProps) {
+  onEditPretest,
+}: PretestDisplayProps) {
   console.log(
-    "==================== QUIZ DISPLAY COMPONENT ===================="
+    "==================== PRETEST DISPLAY COMPONENT ===================="
   );
-  console.log("QuizDisplay received quiz:", JSON.stringify(quiz, null, 2));
-  console.log("Quiz questions:", quiz?.questions);
+  console.log(
+    "PretestDisplay received pretest:",
+    JSON.stringify(pretest, null, 2)
+  );
+  console.log("Pretest questions:", pretest?.questions);
   const handleEdit = (id: string) => {
-    onEditQuiz(id);
+    onEditPretest(id);
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to archive this quiz?")) {
-      handleArchiveQuiz(id);
+    if (window.confirm("Are you sure you want to archive this pretest?")) {
+      handleArchivePretest(id);
     }
   };
 
-  const handleArchiveQuiz = async (quizId: string) => {
+  const handleArchivePretest = async (pretestId: string) => {
     try {
-      await fetch(`/api/quizzes/${quizId}/archive`, {
+      await fetch(`/api/pretests/${pretestId}/archive`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -35,7 +37,7 @@ export default function QuizDisplay({
       });
       onBack();
     } catch (error) {
-      console.error("Error archiving quiz:", error);
+      console.error("Error archiving pretest:", error);
     }
   };
 
@@ -43,7 +45,7 @@ export default function QuizDisplay({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <Button variant="ghost" onClick={onBack} className="mb-4">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Quiz List
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Pretest List
         </Button>
         <div className="flex gap-2">
           <Button
@@ -51,7 +53,7 @@ export default function QuizDisplay({
             size="icon"
             onClick={(e) => {
               e.stopPropagation();
-              handleEdit(quiz.id.toString());
+              handleEdit(pretest.id.toString());
             }}
           >
             <Edit className="h-4 w-4" />
@@ -61,7 +63,7 @@ export default function QuizDisplay({
             size="icon"
             onClick={(e) => {
               e.stopPropagation();
-              handleDelete(quiz.id.toString());
+              handleDelete(pretest.id.toString());
             }}
             className="text-yellow-500 hover:text-yellow-700 hover:bg-yellow-100"
           >
@@ -71,12 +73,12 @@ export default function QuizDisplay({
       </div>
 
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold">{quiz.title}</h2>
+        <h2 className="text-3xl font-bold">{pretest.title}</h2>
         <p className="text-muted-foreground">
-          Total Questions: {quiz.questions.length}
+          Total Questions: {pretest.questions.length}
         </p>
       </div>
-      {quiz.questions.map((question, index) => (
+      {pretest.questions.map((question, index) => (
         <Card key={question.id}>
           <CardHeader>
             <CardTitle>Question {index + 1}</CardTitle>

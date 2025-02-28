@@ -12,20 +12,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Edit, Trash2, Search } from "lucide-react";
-import { QuizListProps } from "@/lib/types";
+import { PretestListProps } from "@/lib/types";
 
-export default function QuizList({
-  quizzes,
-  onQuizSelect,
+export default function PretestList({
+  pretests,
+  onPretestSelect,
   isLoading,
-  onArchiveQuiz,
-  onEditQuiz,
-}: QuizListProps) {
+  onArchivePretest,
+  onEditPretest,
+}: PretestListProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredQuizzes = quizzes
-    .filter((quiz) =>
-      quiz.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredPretests = pretests
+    .filter((pretest) =>
+      pretest.title.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort(
       (a, b) =>
@@ -34,15 +34,15 @@ export default function QuizList({
 
   const handleDelete = async (id: string) => {
     try {
-      await onArchiveQuiz(id);
+      await onArchivePretest(id);
     } catch (error) {
-      console.error("Failed to archive quiz:", error);
+      console.error("Failed to archive pretest:", error);
       // You might want to add toast notification here
     }
   };
 
   const handleEdit = (id: string) => {
-    onEditQuiz(id);
+    onEditPretest(id);
   };
 
   return (
@@ -50,7 +50,7 @@ export default function QuizList({
       <div className="flex items-center space-x-2">
         <Search className="h-5 w-5 text-gray-500" />
         <Input
-          placeholder="Search quizzes..."
+          placeholder="Search pretests..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm"
@@ -58,7 +58,7 @@ export default function QuizList({
       </div>
 
       {isLoading ? (
-        <div>Loading quizzes...</div>
+        <div>Loading pretests...</div>
       ) : (
         <Table>
           <TableHeader>
@@ -69,17 +69,17 @@ export default function QuizList({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredQuizzes.map((quiz) => (
-              <TableRow key={quiz.id} className="hover:bg-transparent">
+            {filteredPretests.map((pretest) => (
+              <TableRow key={pretest.id} className="hover:bg-transparent">
                 <TableCell className="font-medium">
                   <a
-                    onClick={() => onQuizSelect(quiz.id)}
+                    onClick={() => onPretestSelect(pretest.id)}
                     className="hover:text-tutorpro-darkPurple hover:cursor-pointer"
                   >
-                    {quiz.title}
+                    {pretest.title}
                   </a>
                 </TableCell>
-                <TableCell>{quiz.questions.length}</TableCell>
+                <TableCell>{pretest.questions.length}</TableCell>
               </TableRow>
             ))}
           </TableBody>

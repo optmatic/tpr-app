@@ -1,17 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Edit } from "lucide-react";
-import { QuizDisplayProps } from "@/lib/types";
+import { PretestDisplayProps } from "@/lib/types";
 import React from "react";
 
 export default function PretestDisplay({
-  quiz,
+  pretest,
   onBack,
-  onEditQuiz,
-  onTakeQuiz,
-}: QuizDisplayProps & { onTakeQuiz: () => void }) {
+  onEditPretest,
+  onTakePretest,
+}: PretestDisplayProps & { onTakePretest: () => void }) {
   const handleEdit = (id: string) => {
-    onEditQuiz(id);
+    onEditPretest(id);
   };
 
   return (
@@ -25,7 +25,7 @@ export default function PretestDisplay({
           size="icon"
           onClick={(e) => {
             e.stopPropagation();
-            handleEdit(quiz.id.toString());
+            handleEdit(pretest.id.toString());
           }}
         >
           <Edit className="h-4 w-4" />
@@ -34,15 +34,17 @@ export default function PretestDisplay({
 
       <Card>
         <CardHeader>
-          <CardTitle>{quiz.title}</CardTitle>
+          <CardTitle>{pretest.title}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <p>Total Questions: {quiz.questions.length}</p>
-            <p>Last Updated: {new Date(quiz.updatedAt).toLocaleDateString()}</p>
+            <p>Total Questions: {pretest.questions.length}</p>
+            <p>
+              Last Updated: {new Date(pretest.updatedAt).toLocaleDateString()}
+            </p>
 
-            <Button onClick={onTakeQuiz} className="w-full mt-4">
-              Start Quiz
+            <Button onClick={onTakePretest} className="w-full mt-4">
+              Start Pretest
             </Button>
           </div>
         </CardContent>

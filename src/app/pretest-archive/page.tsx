@@ -12,45 +12,45 @@ import {
 } from "@/components/ui/table";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { Quiz } from "@/lib/types";
+import type { Pretest } from "@/lib/types";
 
 export default function PretestArchivePage() {
-  const [archivedQuizzes, setArchivedQuizzes] = useState<Quiz[]>([]);
+  const [archivedPretests, setArchivedPretests] = useState<Pretest[]>([]);
   const router = useRouter();
 
   useEffect(() => {
-    fetchArchivedQuizzes();
+    fetchArchivedPretests();
   }, []);
 
-  const fetchArchivedQuizzes = async () => {
+  const fetchArchivedPretests = async () => {
     try {
-      const response = await fetch("/api/quizzes/archived");
+      const response = await fetch("/api/pretests/archived");
       const data = await response.json();
-      setArchivedQuizzes(data);
+      setArchivedPretests(data);
     } catch (error) {
-      console.error("Error fetching archived quizzes:", error);
+      console.error("Error fetching archived pretests:", error);
     }
   };
 
-  const handleRestore = async (quizId: string) => {
+  const handleRestore = async (pretestId: string) => {
     try {
-      await fetch(`/api/quizzes/${quizId}/archive`, {
+      await fetch(`/api/pretests/${pretestId}/archive`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ archived: false }),
       });
-      fetchArchivedQuizzes();
+      fetchArchivedPretests();
     } catch (error) {
-      console.error("Error restoring quiz:", error);
+      console.error("Error restoring pretest:", error);
     }
   };
 
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex-col items-center">
-        <h1 className="text-2xl ml-4">Archived Quizzes</h1>
+        <h1 className="text-2xl ml-4">Archived Pretests</h1>
         <Button variant="ghost" onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back
         </Button>
@@ -65,14 +65,14 @@ export default function PretestArchivePage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {archivedQuizzes.map((quiz) => (
-            <TableRow key={quiz.id}>
-              <TableCell>{quiz.title}</TableCell>
-              <TableCell>{quiz.questions.length}</TableCell>
+          {archivedPretests.map((pretest) => (
+            <TableRow key={pretest.id}>
+              <TableCell>{pretest.title}</TableCell>
+              <TableCell>{pretest.questions.length}</TableCell>
               <TableCell>
                 <Button
                   variant="ghost"
-                  onClick={() => handleRestore(quiz.id.toString())}
+                  onClick={() => handleRestore(pretest.id.toString())}
                   className="text-blue-500 hover:text-blue-700"
                 >
                   Restore

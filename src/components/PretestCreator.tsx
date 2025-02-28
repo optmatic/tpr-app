@@ -18,8 +18,8 @@ type Question = {
   }[];
 };
 
-export default function QuizCreator() {
-  const [quizTitle, setQuizTitle] = useState("");
+export default function PretestCreator() {
+  const [pretestTitle, setPretestTitle] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<Question>({
     text: "",
@@ -76,10 +76,10 @@ export default function QuizCreator() {
     setCurrentQuestion({ ...currentQuestion, answers: newAnswers });
   };
 
-  const handleSaveQuiz = async () => {
+  const handleSavePretest = async () => {
     try {
-      if (!quizTitle.trim()) {
-        alert("Please enter a quiz title");
+      if (!pretestTitle.trim()) {
+        alert("Please enter a pretest title");
         return;
       }
 
@@ -113,7 +113,7 @@ export default function QuizCreator() {
       }
 
       const requestBody = {
-        title: quizTitle,
+        title: pretestTitle,
         questions: validQuestions.map((q) => ({
           text: q.text.trim(),
           orderIndex: q.orderIndex,
@@ -127,7 +127,7 @@ export default function QuizCreator() {
         })),
       };
 
-      const response = await fetch("/api/quizzes", {
+      const response = await fetch("/api/pretests", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -145,12 +145,12 @@ export default function QuizCreator() {
           data?.error ||
             data?.message ||
             JSON.stringify(data) ||
-            "Failed to save quiz"
+            "Failed to save pretest"
         );
       }
 
       // Clear form after successful save
-      setQuizTitle("");
+      setPretestTitle("");
       setQuestions([]);
       setCurrentQuestion({
         text: "",
@@ -160,11 +160,11 @@ export default function QuizCreator() {
         answers: Array(4).fill({ text: "", isCorrect: false }),
       });
 
-      alert("Quiz saved successfully!");
+      alert("Pretest saved successfully!");
     } catch (error) {
-      console.error("Failed to save quiz:", error);
+      console.error("Failed to save pretest:", error);
       alert(
-        `Failed to save quiz: ${
+        `Failed to save pretest: ${
           error instanceof Error ? error.message : "Unknown error"
         }`
       );
@@ -174,14 +174,14 @@ export default function QuizCreator() {
   return (
     <div className="space-y-6">
       <div>
-        <Label htmlFor="quiz-title">
-          <span className="text-lg font-semibold">Quiz Title</span>
+        <Label htmlFor="pretest-title">
+          <span className="text-lg font-semibold">Pretest Title</span>
         </Label>
         <Input
-          id="quiz-title"
-          value={quizTitle}
-          onChange={(e) => setQuizTitle(e.target.value)}
-          placeholder="Enter quiz title"
+          id="pretest-title"
+          value={pretestTitle}
+          onChange={(e) => setPretestTitle(e.target.value)}
+          placeholder="Enter pretest title"
           className="mt-2"
         />
       </div>
@@ -266,7 +266,7 @@ export default function QuizCreator() {
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Quiz Preview</h2>
+        <h2 className="text-xl font-semibold">Pretest Preview</h2>
         {questions.map((q, index) => (
           <div key={index} className="border p-4 rounded-md">
             <div className="flex justify-between items-start">
@@ -315,9 +315,9 @@ export default function QuizCreator() {
       <Button
         className="w-full"
         disabled={questions.length === 0}
-        onClick={handleSaveQuiz}
+        onClick={handleSavePretest}
       >
-        Save Quiz
+        Save Pretest
       </Button>
     </div>
   );

@@ -67,13 +67,13 @@ const data = {
       label: "Admin",
       items: [
         {
-          name: "Quiz Creator",
-          url: "/quiz-creator",
+          name: "Pretest Creator",
+          url: "/pretest-creator",
           icon: Blocks,
         },
         {
-          name: "Quiz List",
-          url: "/quiz-list",
+          name: "Pretest List",
+          url: "/pretest-list",
           icon: ListCheck,
         },
         {
@@ -107,8 +107,8 @@ const data = {
           icon: UserRound,
         },
         {
-          name: "Quiz List",
-          url: "/quiz-list",
+          name: "Pretest List",
+          url: "/pretest-list",
           icon: ListCheck,
         },
         {

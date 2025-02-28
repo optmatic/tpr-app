@@ -8,33 +8,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Trash2, Plus, ArrowLeft } from "lucide-react";
-import { Question, Quiz } from "@/lib/types";
+import { Pretest, Question } from "@/lib/types";
 
-type QuizEditorProps = {
-  quiz: Quiz;
-  onSave: (updatedQuiz: Quiz) => void;
+type PretestEditorProps = {
+  pretest: Pretest;
+  onSave: (updatedPretest: Pretest) => void;
   onBack: () => void;
 };
 
-export default function QuizEditor({
-  quiz: initialQuiz,
+export default function PretestEditor({
+  pretest: initialPretest,
   onSave,
   onBack,
-}: QuizEditorProps) {
-  const [quiz, setQuiz] = useState<Quiz>(initialQuiz);
+}: PretestEditorProps) {
+  const [pretest, setPretest] = useState<Pretest>(initialPretest);
 
-  const updateQuizTitle = (newTitle: string) => {
-    setQuiz({ ...quiz, title: newTitle });
+  const updatePretestTitle = (newTitle: string) => {
+    setPretest({ ...pretest, title: newTitle });
   };
 
   const addQuestion = () => {
-    const questionId = quiz.questions.length + 1;
+    const questionId = pretest.questions.length + 1;
     const newQuestion: Question = {
       updatedAt: new Date(),
       id: questionId,
       text: "",
-      orderIndex: quiz.questions.length,
-      quizId: quiz.id,
+      orderIndex: pretest.questions.length,
+      pretestId: pretest.id,
       type: "multiple-choice",
       correctAnswer: "",
       answers: Array(4)
@@ -46,43 +46,43 @@ export default function QuizEditor({
           questionId,
         })),
     };
-    setQuiz({ ...quiz, questions: [...quiz.questions, newQuestion] });
+    setPretest({ ...pretest, questions: [...pretest.questions, newQuestion] });
   };
 
   const updateQuestion = (index: number, updatedQuestion: Question) => {
-    const updatedQuestions = [...quiz.questions];
+    const updatedQuestions = [...pretest.questions];
     updatedQuestions[index] = updatedQuestion;
-    setQuiz({ ...quiz, questions: updatedQuestions });
+    setPretest({ ...pretest, questions: updatedQuestions });
   };
 
   const removeQuestion = (index: number) => {
-    const updatedQuestions = quiz.questions.filter((_, i) => i !== index);
-    setQuiz({ ...quiz, questions: updatedQuestions });
+    const updatedQuestions = pretest.questions.filter((_, i) => i !== index);
+    setPretest({ ...pretest, questions: updatedQuestions });
   };
 
   const handleSave = async () => {
     try {
-      await onSave(quiz);
+      await onSave(pretest);
     } catch (error) {
-      console.error("Failed to save quiz:", error);
+      console.error("Failed to save pretest:", error);
     }
   };
 
   return (
     <div className="space-y-6">
       <Button variant="ghost" onClick={onBack} className="mb-4">
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Quiz List
+        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Pretest List
       </Button>
       <div className="space-y-4">
-        <h2 className="text-3xl font-bold">Edit Quiz</h2>
+        <h2 className="text-3xl font-bold">Edit Pretest</h2>
         <Input
-          value={quiz.title}
-          onChange={(e) => updateQuizTitle(e.target.value)}
-          placeholder="Quiz Title"
+          value={pretest.title}
+          onChange={(e) => updatePretestTitle(e.target.value)}
+          placeholder="Pretest Title"
           className="text-2xl font-bold"
         />
       </div>
-      {quiz.questions.map((question, index) => (
+      {pretest.questions.map((question, index) => (
         <Card key={question.id}>
           <CardHeader>
             <CardTitle className="flex justify-between">
@@ -155,7 +155,7 @@ export default function QuizEditor({
         <Button onClick={addQuestion}>
           <Plus className="mr-2 h-4 w-4" /> Add Question
         </Button>
-        <Button onClick={handleSave}>Save Quiz</Button>
+        <Button onClick={handleSave}>Save Pretest</Button>
       </div>
     </div>
   );

@@ -13,12 +13,12 @@ import { Input } from "@/components/ui/input";
 import { ChevronLeft } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Quiz } from "@/lib/types";
+import { Pretest } from "@/lib/types";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 
 // Type-safe transform function
-function transformToUIQuiz(quiz: {
+function transformToUIPretest(pretest: {
   id: number;
   title: string;
   questions: Array<{
@@ -26,7 +26,7 @@ function transformToUIQuiz(quiz: {
     text: string;
     type?: string;
     orderIndex?: number;
-    quizId: number;
+    pretestId: number;
     updatedAt?: string;
     correctAnswer?: string;
     answers: Array<{
@@ -38,18 +38,18 @@ function transformToUIQuiz(quiz: {
   }>;
   author?: any;
   updatedAt?: string;
-}): Quiz {
+}): Pretest {
   return {
-    id: quiz.id,
-    title: quiz.title,
-    questions: quiz.questions.map((q) => ({
+    id: pretest.id,
+    title: pretest.title,
+    questions: pretest.questions.map((q) => ({
       id: q.id,
       text: q.text,
       type: "multiple-choice",
       orderIndex: q.orderIndex || 0,
-      quizId: q.quizId,
+      pretestId: q.pretestId,
       updatedAt: new Date(
-        q.updatedAt || quiz.updatedAt || new Date().toISOString()
+        q.updatedAt || pretest.updatedAt || new Date().toISOString()
       ),
       correctAnswer: q.answers.find((a) => a.isCorrect)?.text || "",
       answers: q.answers.map((a) => ({
@@ -59,13 +59,13 @@ function transformToUIQuiz(quiz: {
         questionId: a.questionId,
       })),
     })),
-    author: quiz.author,
-    updatedAt: new Date(quiz.updatedAt || new Date().toISOString()),
+    author: pretest.author,
+    updatedAt: new Date(pretest.updatedAt || new Date().toISOString()),
   };
 }
 
 interface PretestTakerProps {
-  quiz: Quiz;
+  pretest: Pretest;
   onComplete?: (results: {
     total: number;
     correct: number;
@@ -75,13 +75,13 @@ interface PretestTakerProps {
 }
 
 export default function PretestTaker({
-  quiz,
+  pretest,
   onComplete,
   onBack,
 }: PretestTakerProps) {
-  console.log("PretestTaker rendering with quiz:", quiz.title);
-  console.log("Questions count:", quiz.questions.length);
-  console.log("Question IDs:", quiz.questions.map((q) => q.id).join(", "));
+  console.log("PretestTaker rendering with pretest:", pretest.title);
+  console.log("Questions count:", pretest.questions.length);
+  console.log("Question IDs:", pretest.questions.map((q) => q.id).join(", "));
 
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
@@ -89,11 +89,11 @@ export default function PretestTaker({
 
   // Initialize userAnswers array with empty strings
   useEffect(() => {
-    console.log("Quiz changed, resetting state for quiz:", quiz.title);
-    setUserAnswers(Array(quiz.questions.length).fill(""));
+    console.log("Pretest changed, resetting state for pretest:", pretest.title);
+    setUserAnswers(Array(pretest.questions.length).fill(""));
     setShowResults(false);
     setAllQuestionsAnswered(false);
-  }, [quiz]);
+  }, [pretest]);
 
   // Check if all questions have been answered
   useEffect(() => {
@@ -109,11 +109,11 @@ export default function PretestTaker({
     setUserAnswers(newAnswers);
   };
 
-  // Calculate quiz results
+  // Calculate pretest results
   const calculateResults = () => {
     let correctCount = 0;
 
-    quiz.questions.forEach((question, index) => {
+    pretest.questions.forEach((question, index) => {
       const userAnswer = userAnswers[index]?.trim().toLowerCase();
       const correctAnswer = question.correctAnswer?.trim().toLowerCase();
 
@@ -123,51 +123,51 @@ export default function PretestTaker({
     });
 
     return {
-      total: quiz.questions.length,
+      total: pretest.questions.length,
       correct: correctCount,
-      percentage: Math.round((correctCount / quiz.questions.length) * 100),
+      percentage: Math.round((correctCount / pretest.questions.length) * 100),
     };
   };
 
-  // Handle quiz completion
+  // Handle pretest completion
   const handleComplete = () => {
-    console.log("Quiz completed, showing results");
+    console.log("Pretest completed, showing results");
     setShowResults(true);
     const results = calculateResults();
 
     // Save results to localStorage
-    const quizResult = {
+    const pretestResult = {
       id: Date.now().toString(),
       studentName: "Current Student",
-      quizName: quiz.title,
+      pretestName: pretest.title,
       score: `${results.correct}/${results.total} (${results.percentage}%)`,
       date: new Date().toISOString().split("T")[0],
     };
 
     try {
       // Get existing results
-      const storedResults = localStorage.getItem("quizResults");
+      const storedResults = localStorage.getItem("pretestResults");
       const existingResults = storedResults ? JSON.parse(storedResults) : [];
 
       // Add new result and save back to localStorage
       localStorage.setItem(
-        "quizResults",
-        JSON.stringify([...existingResults, quizResult])
+        "pretestResults",
+        JSON.stringify([...existingResults, pretestResult])
       );
-      console.log("Quiz results saved to localStorage");
+      console.log("Pretest results saved to localStorage");
 
       // Show success notification with Sonner - using setTimeout to ensure it happens after state update
       setTimeout(() => {
-        toast.success("Quiz Submitted Successfully", {
+        toast.success("Pretest Submitted Successfully", {
           description: `Your score: ${results.correct}/${results.total} (${results.percentage}%)`,
           duration: 5000, // Show for 5 seconds
         });
         console.log("Toast notification triggered");
       }, 100);
     } catch (error) {
-      console.error("Error saving quiz results:", error);
+      console.error("Error saving pretest results:", error);
       toast.error("Error Saving Results", {
-        description: "There was a problem saving your quiz results.",
+        description: "There was a problem saving your pretest results.",
         duration: 5000,
       });
     }
@@ -186,7 +186,7 @@ export default function PretestTaker({
     return (
       <Card className="w-full mx-auto">
         <CardHeader>
-          <CardTitle>Quiz Results: {quiz.title}</CardTitle>
+          <CardTitle>Pretest Results: {pretest.title}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center space-y-4">
@@ -207,19 +207,23 @@ export default function PretestTaker({
     );
   }
 
-  console.log("Rendering quiz view with", quiz.questions.length, "questions");
+  console.log(
+    "Rendering pretest view with",
+    pretest.questions.length,
+    "questions"
+  );
 
   // Ensure we have unique questions by ID
   const uniqueQuestions = Array.from(
-    new Map(quiz.questions.map((q) => [q.id, q])).values()
+    new Map(pretest.questions.map((q) => [q.id, q])).values()
   );
 
   return (
     <Card className="w-full mx-auto">
       <CardHeader>
-        <CardTitle>{quiz.title}</CardTitle>
+        <CardTitle>{pretest.title}</CardTitle>
         <CardDescription>
-          Answer all questions to complete the quiz
+          Answer all questions to complete the pretest.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
@@ -260,7 +264,7 @@ export default function PretestTaker({
             </Button>
           )}
           <Button onClick={handleComplete} disabled={!allQuestionsAnswered}>
-            Submit Quiz
+            Submit Pretest
           </Button>
         </div>
       </CardContent>

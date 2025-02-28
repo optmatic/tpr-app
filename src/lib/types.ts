@@ -4,15 +4,15 @@ export type Question = {
   id: number | string;
   text: string;
   orderIndex: number;
-  quizId: number;
+  pretestId: number;
   options?: string[];
   correctAnswer: string;
   answers: Answer[];
 };
 
-export interface QuizTakerProps {
+export interface PretestTakerProps {
   title: string;
-  quiz: Quiz;
+  pretest: Pretest;
   questions: QuestionProps[];
   currentQuestionIndex: number;
   userAnswers: string[];
@@ -65,7 +65,7 @@ export type Answer = {
   isCorrect: boolean;
 };
 
-export type Quiz = {
+export type Pretest = {
   id: number;
   title: string;
   updatedAt: Date;
@@ -78,13 +78,13 @@ export type Quiz = {
   } | null;
 };
 
-export type QuizWithRelations = {
+export type PretestWithRelations = {
   id: number;
   title: string;
   updatedAt: Date;
   questions: {
     id: number;
-    quizId: number;
+    pretestId: number;
     text: string;
     orderIndex: number;
     answers: {
@@ -102,7 +102,7 @@ export type QuizWithRelations = {
   } | null;
 };
 
-export type QuizListItem = {
+export type PretestListItem = {
   id: string;
   title: string;
   updatedAt: Date;
@@ -113,19 +113,19 @@ export type QuizListItem = {
   }>;
 };
 
-export type QuizListProps = {
-  quizzes: QuizListItem[];
-  onQuizSelect: (quizId: string) => void;
+export type PretestListProps = {
+  pretests: PretestListItem[];
+  onPretestSelect: (pretestId: string) => void;
   isLoading: boolean;
-  onArchiveQuiz: (quizId: string) => Promise<void>;
-  onEditQuiz: (quizId: string) => void;
+  onArchivePretest: (pretestId: string) => Promise<void>;
+  onEditPretest: (pretestId: string) => void;
 };
 
-export type QuizDisplayProps = {
-  quiz: Quiz;
+export type PretestDisplayProps = {
+  pretest: Pretest;
   onBack: () => void;
-  onEditQuiz: (quizId: string) => void;
-  onDeleteQuiz?: (quizId: string) => void;
+  onEditPretest: (pretestId: string) => void;
+  onDelete?: (pretestId: string) => void;
 };
 
 export interface ResourceInfo {
