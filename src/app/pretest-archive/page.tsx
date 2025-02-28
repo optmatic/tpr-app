@@ -16,6 +16,8 @@ import type { Pretest } from "@/lib/types";
 
 export default function PretestArchivePage() {
   const [archivedPretests, setArchivedPretests] = useState<Pretest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -23,12 +25,20 @@ export default function PretestArchivePage() {
   }, []);
 
   const fetchArchivedPretests = async () => {
+    setError(null);
+    setIsLoading(true);
     try {
       const response = await fetch("/api/pretests/archived");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       setArchivedPretests(data);
     } catch (error) {
       console.error("Error fetching archived pretests:", error);
+      setError("Failed to load archived pretests. Please try again later.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -56,32 +66,37 @@ export default function PretestArchivePage() {
         </Button>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Questions</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {archivedPretests.map((pretest) => (
-            <TableRow key={pretest.id}>
-              <TableCell>{pretest.title}</TableCell>
-              <TableCell>{pretest.questions.length}</TableCell>
-              <TableCell>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleRestore(pretest.id.toString())}
-                  className="text-blue-500 hover:text-blue-700"
-                >
-                  Restore
-                </Button>
-              </TableCell>
+      {isLoading && <div>Loading...</div>}
+      {error && <div className="text-red-500">{error}</div>}
+
+      {!isLoading && !error && (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Questions</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {archivedPretests.map((pretest) => (
+              <TableRow key={pretest.id}>
+                <TableCell>{pretest.title}</TableCell>
+                <TableCell>{pretest.questions.length}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleRestore(pretest.id.toString())}
+                    className="text-blue-500 hover:text-blue-700"
+                  >
+                    Restore
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 }
