@@ -11,6 +11,7 @@ type Question = {
   text: string;
   orderIndex: number;
   type: "multiple-choice";
+  multipleCorrect: boolean;
   answers: {
     text: string;
     isCorrect: boolean;
@@ -24,6 +25,7 @@ export default function QuizCreator() {
     text: "",
     orderIndex: 0,
     type: "multiple-choice",
+    multipleCorrect: false,
     answers: Array(4).fill({ text: "", isCorrect: false }),
   });
 
@@ -43,6 +45,7 @@ export default function QuizCreator() {
         text: "",
         type: "multiple-choice",
         orderIndex: questions.length + 1,
+        multipleCorrect: false,
         answers: Array(4).fill({ text: "", isCorrect: false }),
       });
     }
@@ -59,10 +62,17 @@ export default function QuizCreator() {
   };
 
   const handleCorrectAnswerChange = (index: number) => {
-    const newAnswers = currentQuestion.answers.map((answer, i) => ({
-      ...answer,
-      isCorrect: i === index,
-    }));
+    const newAnswers = [...currentQuestion.answers];
+    if (currentQuestion.multipleCorrect) {
+      newAnswers[index] = {
+        ...newAnswers[index],
+        isCorrect: !newAnswers[index].isCorrect,
+      };
+    } else {
+      newAnswers.forEach((answer, i) => {
+        newAnswers[i] = { ...answer, isCorrect: i === index };
+      });
+    }
     setCurrentQuestion({ ...currentQuestion, answers: newAnswers });
   };
 
@@ -146,6 +156,7 @@ export default function QuizCreator() {
         text: "",
         type: "multiple-choice",
         orderIndex: 0,
+        multipleCorrect: false,
         answers: Array(4).fill({ text: "", isCorrect: false }),
       });
 
@@ -182,6 +193,22 @@ export default function QuizCreator() {
           <Label>
             <span className="text-lg font-semibold">Question Type</span>
           </Label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="multiple-correct"
+              checked={currentQuestion.multipleCorrect}
+              onChange={(e) =>
+                setCurrentQuestion({
+                  ...currentQuestion,
+                  multipleCorrect: e.target.checked,
+                })
+              }
+            />
+            <Label htmlFor="multiple-correct">
+              Allow multiple correct answers
+            </Label>
+          </div>
         </div>
 
         <div>
@@ -205,18 +232,30 @@ export default function QuizCreator() {
                 onChange={(e) => handleOptionChange(index, e.target.value)}
                 placeholder={`Option ${index + 1}`}
               />
-              <RadioGroup
-                value={answer.isCorrect ? index.toString() : ""}
-                onValueChange={() => handleCorrectAnswerChange(index)}
-              >
+              {currentQuestion.multipleCorrect ? (
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem
-                    value={index.toString()}
+                  <input
+                    type="checkbox"
+                    checked={answer.isCorrect}
+                    onChange={() => handleCorrectAnswerChange(index)}
                     id={`option-${index}`}
                   />
                   <Label htmlFor={`option-${index}`}>Correct</Label>
                 </div>
-              </RadioGroup>
+              ) : (
+                <RadioGroup
+                  value={answer.isCorrect ? index.toString() : ""}
+                  onValueChange={() => handleCorrectAnswerChange(index)}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem
+                      value={index.toString()}
+                      id={`option-${index}`}
+                    />
+                    <Label htmlFor={`option-${index}`}>Correct</Label>
+                  </div>
+                </RadioGroup>
+              )}
             </div>
           ))}
         </div>

@@ -10,15 +10,6 @@ export type Question = {
   answers: Answer[];
 };
 
-// export interface QuizTakerProps {
-//   id: number;
-//   title: string;
-//   description?: string;
-//   questions: QuestionProps[];
-//   createdAt?: string;
-//   updatedAt?: string;
-// }
-
 export interface QuizTakerProps {
   title: string;
   quiz: Quiz;
