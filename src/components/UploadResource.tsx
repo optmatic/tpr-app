@@ -1,124 +1,169 @@
-"use client"
+"use client";
 
-import { useState, useCallback } from "react"
-import { useDropzone } from "react-dropzone"
-import { Cloud, File, Loader2 } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import Image from 'next/image'
+import { useState, useCallback } from "react";
+import { useDropzone } from "react-dropzone";
+import { Cloud, File, Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 interface UploadResourceProps {
   onUploadSuccess?: (resource: {
+    id: string;
     name: string;
     size: number;
-    uploadDate: Date;
+    lastUpdated: string;
     title: string;
     yearLevel: string;
     subject: string;
-    imageUrl: string;
+    imageUrl: string | null;
+    path: string;
   }) => void;
 }
 
 export function UploadResource({ onUploadSuccess }: UploadResourceProps) {
-  const [isUploading, setIsUploading] = useState(false)
-  const [showDetailsDialog, setShowDetailsDialog] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [selectedImage, setSelectedImage] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [resourceDetails, setResourceDetails] = useState({
-    title: '',
-    yearLevel: '',
-    subject: ''
-  })
+    title: "",
+    yearLevel: "",
+    subject: "",
+  });
   const [uploadedFile, setUploadedFile] = useState<{
+    id: string;
     name: string;
     size: number;
-    uploadDate: Date;
+    lastUpdated: string;
     title: string;
     yearLevel: string;
     subject: string;
-    imageUrl: string;
-  } | null>(null)
+    imageUrl: string | null;
+    path: string;
+  } | null>(null);
 
-  const yearLevels = ["Foundation", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6"]
-  const subjects = ["Mathematics", "English", "Science", "History", "Geography"]
+  const yearLevels = [
+    "Foundation",
+    "Year 1",
+    "Year 2",
+    "Year 3",
+    "Year 4",
+    "Year 5",
+    "Year 6",
+  ];
+  const subjects = [
+    "Mathematics",
+    "English",
+    "Science",
+    "History",
+    "Geography",
+  ];
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      setSelectedFile(acceptedFiles[0])
-      setShowDetailsDialog(true)
+      setSelectedFile(acceptedFiles[0]);
+      setShowDetailsDialog(true);
     }
-  }, [])
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      setSelectedImage(file)
-      const reader = new FileReader()
+      setSelectedImage(file);
+      const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   const handleUpload = async () => {
-    if (!selectedFile) return
+    if (
+      !selectedFile ||
+      !resourceDetails.title ||
+      !resourceDetails.yearLevel ||
+      !resourceDetails.subject
+    ) {
+      console.error("Please fill in all required fields");
+      return;
+    }
 
     try {
-      setIsUploading(true)
-      setShowDetailsDialog(false)
+      setIsUploading(true);
+      setShowDetailsDialog(false);
 
-      const formData = new FormData()
-      formData.append("file", selectedFile)
-      formData.append("title", resourceDetails.title)
-      formData.append("yearLevel", resourceDetails.yearLevel)
-      formData.append("subject", resourceDetails.subject)
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      formData.append("title", resourceDetails.title);
+      formData.append("yearLevel", resourceDetails.yearLevel);
+      formData.append("subject", resourceDetails.subject);
       if (selectedImage) {
-        formData.append("image", selectedImage)
+        formData.append("image", selectedImage);
       }
 
       const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
-      })
+      });
 
-      if (!response.ok) throw new Error("Upload failed")
-      
-      const data = await response.json()
-      
-      // Only call the callback if it exists
-      if (onUploadSuccess) {
-        onUploadSuccess(data)
-      }
+      if (!response.ok) throw new Error("Upload failed");
 
-      setUploadedFile({
-        name: selectedFile.name,
+      const data = await response.json();
+
+      // Generate a unique ID using timestamp and random number
+      const uniqueId = `${Date.now()}-${Math.random()
+        .toString(36)
+        .substr(2, 9)}`;
+
+      const newResource = {
+        id: uniqueId, // Use the generated unique ID instead of file name
+        name: resourceDetails.title,
         size: selectedFile.size,
-        uploadDate: new Date(),
-        ...resourceDetails,
-        imageUrl: imagePreview || ''
-      })
+        lastUpdated: new Date().toISOString(),
+        title: resourceDetails.title,
+        yearLevel: resourceDetails.yearLevel,
+        subject: resourceDetails.subject,
+        path: data.path,
+        imageUrl: data.imagePath || null,
+      };
 
+      setUploadedFile(newResource);
+      if (onUploadSuccess) {
+        onUploadSuccess(newResource);
+      }
     } catch (error) {
-      console.error("Upload error:", error)
+      console.error("Upload error:", error);
     } finally {
-      setIsUploading(false)
-      setSelectedFile(null)
-      setSelectedImage(null)
-      setImagePreview(null)
-      setResourceDetails({ title: '', yearLevel: '', subject: '' })
+      setIsUploading(false);
+      setSelectedFile(null);
+      setSelectedImage(null);
+      setImagePreview(null);
+      setResourceDetails({ title: "", yearLevel: "", subject: "" });
     }
-  }
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     disabled: isUploading,
-  })
+  });
 
   return (
     <>
@@ -148,8 +193,14 @@ export function UploadResource({ onUploadSuccess }: UploadResourceProps) {
                     <Cloud className="h-8 w-8 text-muted-foreground" />
                   )}
                   <div className="text-center">
-                    <p className="text-sm font-medium">{isDragActive ? "Drop files here" : "Drag & drop files here"}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Or click to select files</p>
+                    <p className="text-sm font-medium">
+                      {isDragActive
+                        ? "Drop files here"
+                        : "Drag & drop files here"}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Or click to select files
+                    </p>
                   </div>
                 </>
               )}
@@ -160,13 +211,18 @@ export function UploadResource({ onUploadSuccess }: UploadResourceProps) {
             <div className="mt-4 p-4 border rounded-lg">
               <h3 className="font-medium mb-2">Uploaded Resource</h3>
               <p className="text-sm">{uploadedFile.title}</p>
-              <p className="text-xs text-muted-foreground">Year Level: {uploadedFile.yearLevel}</p>
-              <p className="text-xs text-muted-foreground">Subject: {uploadedFile.subject}</p>
+              <p className="text-xs text-muted-foreground">
+                Year Level: {uploadedFile.yearLevel}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Subject: {uploadedFile.subject}
+              </p>
               <p className="text-xs text-muted-foreground">
                 Size: {Math.round(uploadedFile.size / 1024)}kb
               </p>
               <p className="text-xs text-muted-foreground">
-                Last updated: {uploadedFile.uploadDate.toLocaleDateString()}
+                Last updated:{" "}
+                {new Date(uploadedFile.lastUpdated).toLocaleDateString()}
               </p>
             </div>
           )}
@@ -183,7 +239,12 @@ export function UploadResource({ onUploadSuccess }: UploadResourceProps) {
               <label className="text-sm font-medium">Title</label>
               <Input
                 value={resourceDetails.title}
-                onChange={(e) => setResourceDetails(prev => ({ ...prev, title: e.target.value }))}
+                onChange={(e) =>
+                  setResourceDetails((prev) => ({
+                    ...prev,
+                    title: e.target.value,
+                  }))
+                }
                 placeholder="Enter resource title"
               />
             </div>
@@ -191,13 +252,18 @@ export function UploadResource({ onUploadSuccess }: UploadResourceProps) {
               <label className="text-sm font-medium">Year Level</label>
               <Select
                 value={resourceDetails.yearLevel}
-                onValueChange={(value) => setResourceDetails(prev => ({ ...prev, yearLevel: value }))}>
+                onValueChange={(value) =>
+                  setResourceDetails((prev) => ({ ...prev, yearLevel: value }))
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select year level" />
                 </SelectTrigger>
                 <SelectContent>
                   {yearLevels.map((year) => (
-                    <SelectItem key={year} value={year.toLowerCase()}>{year}</SelectItem>
+                    <SelectItem key={year} value={year.toLowerCase()}>
+                      {year}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -206,13 +272,18 @@ export function UploadResource({ onUploadSuccess }: UploadResourceProps) {
               <label className="text-sm font-medium">Subject</label>
               <Select
                 value={resourceDetails.subject}
-                onValueChange={(value) => setResourceDetails(prev => ({ ...prev, subject: value }))}>
+                onValueChange={(value) =>
+                  setResourceDetails((prev) => ({ ...prev, subject: value }))
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select subject" />
                 </SelectTrigger>
                 <SelectContent>
                   {subjects.map((subject) => (
-                    <SelectItem key={subject} value={subject.toLowerCase()}>{subject}</SelectItem>
+                    <SelectItem key={subject} value={subject.toLowerCase()}>
+                      {subject}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -243,6 +314,5 @@ export function UploadResource({ onUploadSuccess }: UploadResourceProps) {
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }
-

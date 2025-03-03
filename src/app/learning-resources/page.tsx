@@ -1,119 +1,222 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Download } from "lucide-react"
-import { Resource, UploadedFile } from "@/lib/types"
-import { getUploadedResources } from "@/lib/resources"
-import { UploadResource } from "@/components/UploadResource"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Download } from "lucide-react";
+import { Resource, UploadedFile } from "@/lib/types";
+import { getUploadedResources } from "@/lib/resources";
+import { UploadResource } from "@/components/UploadResource";
 
-const yearLevels = ["Foundation", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6"]
-const subjects = ["Mathematics", "English", "Science", "History", "Geography"]
+const yearLevels = [
+  "Foundation",
+  "Year 1",
+  "Year 2",
+  "Year 3",
+  "Year 4",
+  "Year 5",
+  "Year 6",
+];
+const subjects = ["Mathematics", "English", "Science", "History", "Geography"];
 
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
+  return new Date(dateString).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
   });
 };
 
-export default function LearningResources() {
-  const [selectedResources, setSelectedResources] = useState<Set<string>>(new Set())
-  const [yearFilter, setYearFilter] = useState<string>("")
-  const [subjectFilter, setSubjectFilter] = useState<string>("")
-  const [uploadedResourcesFormatted, setUploadedResourcesFormatted] = useState<Resource[]>([])
-  const [resources, setResources] = useState<Resource[]>([])
+const saveToLocalStorage = (resources: Resource[]) => {
+  try {
+    console.log("Saving to localStorage:", resources);
+    localStorage.setItem("resources", JSON.stringify(resources));
+  } catch (error) {
+    console.error("Error saving to localStorage:", error);
+  }
+};
 
-  // Fetch resources on component mount
+const getFromLocalStorage = (): Resource[] => {
+  try {
+    if (typeof window === "undefined") return [];
+    const saved = localStorage.getItem("resources");
+    const parsed = saved ? JSON.parse(saved) : [];
+    console.log("Retrieved from localStorage:", parsed);
+    return parsed;
+  } catch (error) {
+    console.error("Error reading from localStorage:", error);
+    return [];
+  }
+};
+
+export default function LearningResources() {
+  const [selectedResources, setSelectedResources] = useState<Set<string>>(
+    new Set()
+  );
+  const [yearFilter, setYearFilter] = useState<string>("");
+  const [subjectFilter, setSubjectFilter] = useState<string>("");
+  const [uploadedResourcesFormatted, setUploadedResourcesFormatted] = useState<
+    Resource[]
+  >([]);
+
+  // Load localStorage data on mount
+  useEffect(() => {
+    const localData = getFromLocalStorage();
+    setUploadedResourcesFormatted(localData);
+  }, []);
+
+  // Separate useEffect for API data
   useEffect(() => {
     const fetchResources = async () => {
-      const uploadedResources = await getUploadedResources()
-      const formatted = uploadedResources.map((file: UploadedFile) => ({
-        id: file.id,
-        title: file.name,
-        fileName: file.name,
-        downloadUrl: file.path,
-        thumbnail: "/placeholder.svg",
-        year: "Uploaded",
-        subject: "Resource",
-        curriculumCode: "-",
-        topic: `Size: ${Math.round(file.size / 1024)}kb`,
-        lastUpdated: file.lastUpdated
-      }))
-      setUploadedResourcesFormatted(formatted)
-    }
-    fetchResources()
-  }, [])
+      try {
+        // Get API resources
+        const uploadedResources = await getUploadedResources();
+        console.log("API resources:", uploadedResources);
+
+        // Get localStorage resources
+        const localResources = getFromLocalStorage();
+
+        // Create a map of existing resources by fileName for quick lookup
+        const existingResourcesMap = new Map(
+          localResources.map((resource) => [resource.fileName, resource])
+        );
+
+        // Format new resources, preserving existing metadata if available
+        const formatted = uploadedResources.map((file: UploadedFile) => {
+          const existing = existingResourcesMap.get(file.name);
+
+          if (existing) {
+            // Preserve existing metadata but update lastUpdated and path
+            return {
+              ...existing,
+              downloadUrl: file.path,
+              lastUpdated: file.lastUpdated,
+            };
+          }
+
+          // Create new resource for files we haven't seen before
+          return {
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            title: file.title || file.name,
+            fileName: file.name,
+            downloadUrl: file.path,
+            thumbnail: file.imageUrl || "/placeholder.svg",
+            year: file.yearLevel || "Uploaded",
+            subject: file.subject || "Resource",
+            curriculumCode: "-",
+            topic: `Size: ${Math.round(file.size / 1024)}kb`,
+            lastUpdated: file.lastUpdated,
+            description: "",
+          };
+        });
+
+        // Update state and localStorage
+        console.log("Updating with merged resources:", formatted);
+        setUploadedResourcesFormatted(formatted);
+        saveToLocalStorage(formatted);
+      } catch (error) {
+        console.error("Error fetching resources:", error);
+      }
+    };
+
+    fetchResources();
+  }, []); // Run once on mount
 
   const toggleResource = (id: string) => {
-    const newSelected = new Set(selectedResources)
+    const newSelected = new Set(selectedResources);
     if (newSelected.has(id)) {
-      newSelected.delete(id)
+      newSelected.delete(id);
     } else {
-      newSelected.add(id)
+      newSelected.add(id);
     }
-    setSelectedResources(newSelected)
-  }
+    setSelectedResources(newSelected);
+  };
 
   const handleDownload = () => {
     selectedResources.forEach((id) => {
-      const resource = uploadedResourcesFormatted.find((r) => r.id === Number(id))
-      if (!resource) return
+      const resource = uploadedResourcesFormatted.find(
+        (r) => r.id === Number(id)
+      );
+      if (!resource) return;
 
-      const link = document.createElement('a')
-      link.href = resource.downloadUrl
-      link.download = resource.fileName
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    })
-  }
+      const link = document.createElement("a");
+      link.href = resource.downloadUrl;
+      link.download = resource.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  };
 
   const filteredResources = uploadedResourcesFormatted.filter((resource) => {
-    if (yearFilter && yearFilter !== "all" && resource.year !== yearFilter) return false;
-    if (subjectFilter && subjectFilter !== "all" && resource.subject !== subjectFilter) return false;
+    if (yearFilter && yearFilter !== "all" && resource.year !== yearFilter)
+      return false;
+    if (
+      subjectFilter &&
+      subjectFilter !== "all" &&
+      resource.subject !== subjectFilter
+    )
+      return false;
     return true;
   });
 
-  // Update the handleNewResource function to transform the upload response into a Resource
-  const handleNewResource = (uploadedResource: { 
-    name: string; 
-    size: number; 
-    uploadDate: Date; 
-    title: string; 
-    yearLevel: string; 
-    subject: string; 
-    imageUrl: string; 
+  const handleNewResource = (uploadedResource: {
+    id: string;
+    name: string;
+    size: number;
+    lastUpdated: string;
+    title: string;
+    yearLevel: string;
+    subject: string;
+    imageUrl: string | null;
+    path: string;
   }) => {
+    console.log("Handling new resource:", uploadedResource);
+
     const resource: Resource = {
-      id: Date.now(), // Temporary ID
+      id: Date.now(),
       title: uploadedResource.title,
       fileName: uploadedResource.name,
-      downloadUrl: uploadedResource.imageUrl,
-      thumbnail: uploadedResource.imageUrl,
+      downloadUrl: uploadedResource.path,
+      thumbnail: uploadedResource.imageUrl || "/placeholder.svg",
       year: uploadedResource.yearLevel,
       subject: uploadedResource.subject,
       curriculumCode: "-",
       topic: `Size: ${Math.round(uploadedResource.size / 1024)}kb`,
-      lastUpdated: uploadedResource.uploadDate?.toISOString() || new Date().toISOString(),
-      description: ""
-    }
-    setResources(prev => [resource, ...prev])
-  }
+      lastUpdated: uploadedResource.lastUpdated,
+      description: "",
+    };
+
+    setUploadedResourcesFormatted((prev) => {
+      const newResources = [resource, ...prev];
+      console.log("Updating state with new resource:", newResources);
+      saveToLocalStorage(newResources);
+      return newResources;
+    });
+  };
 
   return (
     <div className="container mx-auto p-4">
       <div className="mb-6 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h1>Learning Resources</h1>
-          <Button onClick={handleDownload} disabled={selectedResources.size === 0} className="min-w-[120px]">
+          <Button
+            onClick={handleDownload}
+            disabled={selectedResources.size === 0}
+            className="min-w-[120px]"
+          >
             <Download className="mr-2 h-4 w-4" />
-            Download {selectedResources.size > 0 && `(${selectedResources.size})`}
+            Download{" "}
+            {selectedResources.size > 0 && `(${selectedResources.size})`}
           </Button>
         </div>
         <div className="flex flex-wrap gap-4">
@@ -150,7 +253,9 @@ export default function LearningResources() {
           <Card
             key={resource.id}
             className={`group transition-all duration-200 hover:shadow-md ${
-              selectedResources.has(resource.id.toString()) ? "ring-2 ring-primary" : ""
+              selectedResources.has(resource.id.toString())
+                ? "ring-2 ring-primary"
+                : ""
             }`}
           >
             <CardContent className="p-0">
@@ -158,7 +263,9 @@ export default function LearningResources() {
                 <div className="absolute left-3 top-3 z-10">
                   <Checkbox
                     checked={selectedResources.has(resource.id.toString())}
-                    onCheckedChange={() => toggleResource(resource.id.toString())}
+                    onCheckedChange={() =>
+                      toggleResource(resource.id.toString())
+                    }
                     className="h-5 w-5 border-2 border-white bg-white/90 transition-opacity group-hover:opacity-100 data-[state=checked]:bg-primary lg:opacity-0"
                   />
                 </div>
@@ -177,7 +284,9 @@ export default function LearningResources() {
                   </Badge>
                 </div>
                 <h3 className="line-clamp-2 font-medium">{resource.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{resource.topic}</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {resource.topic}
+                </p>
               </div>
             </CardContent>
             <CardFooter className="px-4 py-3 text-sm text-muted-foreground">
@@ -189,5 +298,5 @@ export default function LearningResources() {
 
       <UploadResource onUploadSuccess={handleNewResource} />
     </div>
-  )
+  );
 }

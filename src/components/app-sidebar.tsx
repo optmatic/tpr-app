@@ -22,7 +22,7 @@ import {
   Archive,
 } from "lucide-react";
 
-import Logo from "/public/tutorpro-logo.svg";
+import Logo from "../../public/tutorpro-logo.svg";
 
 import { NavMain } from "@/components/nav-main";
 import { SimpleNav } from "@/components/simple-nav";

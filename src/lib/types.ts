@@ -37,27 +37,31 @@ export interface AnswerProps {
   isCorrect?: boolean;
 }
 
-export type Resource = {
-  id: number;
-  title: string;
-  description: string;
-  downloadUrl: string;
-  fileName: string;
-  thumbnail: string;
-  lastUpdated: string;
-  year: string;
-  subject: string;
-  curriculumCode: string;
-  topic: string;
-};
-
-export type UploadedFile = {
-  id: number;
+export interface UploadedFile {
+  id: string | number;
   name: string;
   size: number;
   path: string;
   lastUpdated: string;
-};
+  title?: string;
+  yearLevel?: string;
+  subject?: string;
+  imageUrl?: string | null;
+}
+
+export interface Resource {
+  id: number;
+  title: string;
+  fileName: string;
+  downloadUrl: string;
+  thumbnail: string;
+  year: string;
+  subject: string;
+  curriculumCode: string;
+  topic: string;
+  lastUpdated: string;
+  description: string;
+}
 
 export type Answer = {
   id: number;
@@ -129,13 +133,12 @@ export type PretestDisplayProps = {
 };
 
 export interface ResourceInfo {
-  id: number;
+  id: string;
   name: string;
   size: number;
-  path: string;
   lastUpdated: string;
-  title: string;
   yearLevel: string;
   subject: string;
-  imageUrl: string;
+  path: string;
+  imageUrl: string | null;
 }
