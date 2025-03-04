@@ -19,11 +19,15 @@ export function ResourceGrid({ resources, setResources }: ResourceGridProps) {
   useEffect(() => {
     setIsLoading(true);
     fetch("/api/resources")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch resources");
+      .then(async (res) => {
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Failed to fetch resources");
+        }
         return res.json();
       })
       .then((data) => {
+        console.log("Fetched resources:", data);
         setResources(data);
       })
       .catch((error) => {
@@ -31,7 +35,7 @@ export function ResourceGrid({ resources, setResources }: ResourceGridProps) {
         setError(error.message);
       })
       .finally(() => setIsLoading(false));
-  }, []); // Initial fetch only
+  }, [setResources]);
 
   if (isLoading) return <div>Loading resources...</div>;
   if (error) return <div>Error loading resources: {error}</div>;

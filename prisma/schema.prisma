@@ -8,65 +8,83 @@ datasource db {
 }
 
 model User {
-  id          Int       @id @default(autoincrement())
-  email       String    @unique
-  name        String?
-  createdAt   DateTime  @default(now())
-  pretests     Pretest[]    // Pretests created by the user
-  attempts    PretestAttempt[] // Pretest attempts by the user
+  id        Int              @id @default(autoincrement())
+  email     String           @unique
+  name      String?
+  createdAt DateTime         @default(now())
+  pretests  Pretest[] // Pretests created by the user
+  attempts  PretestAttempt[] // Pretest attempts by the user
+  resources Resource[]
 }
 
 model Pretest {
-  id          Int       @id @default(autoincrement())
+  id          Int              @id @default(autoincrement())
   title       String
   description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
   questions   Question[]
   attempts    PretestAttempt[]
-  author      User?     @relation(fields: [authorId], references: [id])
+  author      User?            @relation(fields: [authorId], references: [id])
   authorId    Int?
 }
 
 model Question {
-  id          Int       @id @default(autoincrement())
-  text        String
-  orderIndex  Int
-  type        String    // Add this field to store question type
-  pretest     Pretest     @relation(fields: [pretestId], references: [id], onDelete: Cascade)
-  pretestId   Int
-  answers     Answer[]
+  id            Int               @id @default(autoincrement())
+  text          String
+  orderIndex    Int
+  type          String // Add this field to store question type
+  pretest       Pretest           @relation(fields: [pretestId], references: [id], onDelete: Cascade)
+  pretestId     Int
+  answers       Answer[]
   correctAnswer String? // Add this field for short answer questions
-  attempts    QuestionAttempt[]
+  attempts      QuestionAttempt[]
 }
 
 model Answer {
-  id          Int       @id @default(autoincrement())
-  text        String
-  isCorrect   Boolean
-  question    Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  questionId  Int
-  attempts    QuestionAttempt[]
+  id         Int               @id @default(autoincrement())
+  text       String
+  isCorrect  Boolean
+  question   Question          @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId Int
+  attempts   QuestionAttempt[]
 }
 
 model PretestAttempt {
-  id          Int       @id @default(autoincrement())
-  pretest     Pretest     @relation(fields: [pretestId], references: [id], onDelete: Cascade)
-  pretestId   Int
-  user        User        @relation(fields: [userId], references: [id])
-  userId      Int
-  startedAt   DateTime  @default(now())
-  completedAt DateTime?
+  id               Int               @id @default(autoincrement())
+  pretest          Pretest           @relation(fields: [pretestId], references: [id], onDelete: Cascade)
+  pretestId        Int
+  user             User              @relation(fields: [userId], references: [id])
+  userId           Int
+  startedAt        DateTime          @default(now())
+  completedAt      DateTime?
   questionAttempts QuestionAttempt[]
 }
 
 model QuestionAttempt {
-  id          Int       @id @default(autoincrement())
-  question    Question  @relation(fields: [questionId], references: [id])
-  questionId  Int
-  answer      Answer    @relation(fields: [answerId], references: [id])
-  answerId    Int
-  pretestAttempt PretestAttempt @relation(fields: [pretestAttemptId], references: [id])
+  id               Int            @id @default(autoincrement())
+  question         Question       @relation(fields: [questionId], references: [id])
+  questionId       Int
+  answer           Answer         @relation(fields: [answerId], references: [id])
+  answerId         Int
+  pretestAttempt   PretestAttempt @relation(fields: [pretestAttemptId], references: [id])
   pretestAttemptId Int
-  createdAt   DateTime  @default(now())
+  createdAt        DateTime       @default(now())
+}
+
+model Resource {
+  id             Int      @id @default(autoincrement())
+  title          String
+  fileName       String
+  downloadUrl    String
+  thumbnail      String?
+  year           String
+  subject        String
+  curriculumCode String   @default("-")
+  topic          String
+  description    String?
+  lastUpdated    DateTime @default(now())
+  createdAt      DateTime @default(now())
+  authorId       Int?
+  author         User?    @relation(fields: [authorId], references: [id])
 }

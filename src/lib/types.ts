@@ -59,8 +59,8 @@ export interface Resource {
   subject: string;
   curriculumCode: string;
   topic: string;
-  lastUpdated: string;
   description: string;
+  lastUpdated: string;
 }
 
 export type Answer = {

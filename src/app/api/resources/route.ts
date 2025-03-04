@@ -1,78 +1,114 @@
-import { readdir, stat } from "fs/promises";
-import { join } from "path";
 import { NextResponse } from "next/server";
-
-// Add type for resource
-interface Resource {
-  id: string;
-  name: string;
-  size: number;
-  lastUpdated: string;
-  yearLevel: string;
-  subject: string;
-  path: string;
-  imageUrl: string | null;
-}
+import { prisma } from "@/lib/prisma";
+import { Resource as ResourceType } from "@/lib/types";
+import type { Prisma } from "@prisma/client";
 
 export async function GET() {
   try {
-    const uploadDir = join(process.cwd(), "public/uploads");
-    const imageDir = join(process.cwd(), "public/uploads/images");
-
-    // Read the uploads directory
-    const files = await readdir(uploadDir);
-
-    // Get details for each file
-    const resourcePromises = files.map(async (filename) => {
-      // Skip the images directory itself
-      if (filename === "images") return null;
-
-      const filePath = join(uploadDir, filename);
-      const fileStats = await stat(filePath);
-
-      // Try to find matching image (assuming same name with image extension)
-      let imageUrl = null;
-      try {
-        const imageFiles = await readdir(imageDir);
-        // Look for an image that starts with the same name
-        const matchingImage = imageFiles.find((img) =>
-          img.startsWith(filename.split(".")[0])
-        );
-        if (matchingImage) {
-          imageUrl = `/uploads/images/${matchingImage}`;
-        }
-      } catch (e) {
-        // No matching image found
-      }
-
-      // Return typed resource
-      return {
-        id: filename,
-        name: filename,
-        size: fileStats.size,
-        lastUpdated: fileStats.mtime.toISOString(),
-        // Default values since we don't have a DB yet
-        yearLevel: "unknown",
-        subject: "unknown",
-        path: `/uploads/${filename}`,
-        imageUrl: imageUrl,
-      } as Resource;
+    const resources = await prisma.resource.findMany({
+      orderBy: {
+        lastUpdated: "desc",
+      },
     });
 
-    const resources = await Promise.all(resourcePromises);
+    if (!resources) {
+      console.log("No resources found");
+      return NextResponse.json([]);
+    }
 
-    // Filter out null values first, then sort
-    const validResources = resources.filter((r): r is Resource => r !== null);
-    const sortedResources = validResources.sort(
-      (a, b) =>
-        new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
-    );
+    console.log(`Found ${resources.length} resources`);
 
-    return NextResponse.json(sortedResources);
+    // Convert the Prisma Resource to our Resource type
+    const formattedResources = resources.map((dbResource: Prisma.Resource) => ({
+      id: dbResource.id,
+      title: dbResource.title,
+      fileName: dbResource.fileName,
+      downloadUrl: dbResource.downloadUrl,
+      thumbnail: dbResource.thumbnail || "/placeholder.svg",
+      year: dbResource.year,
+      subject: dbResource.subject,
+      curriculumCode: dbResource.curriculumCode,
+      topic: dbResource.topic,
+      description: dbResource.description || "",
+      lastUpdated: dbResource.lastUpdated.toISOString(),
+    }));
+
+    return NextResponse.json(formattedResources);
   } catch (error) {
-    console.error("Error reading resources:", error);
+    console.error("Error in GET /api/resources:", error);
     return NextResponse.json(
       { error: "Failed to fetch resources" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const resource: ResourceType = await request.json();
+
+    // Check if resource already exists
+    const existing = await prisma.resource.findFirst({
+      where: {
+        fileName: resource.fileName,
+        downloadUrl: resource.downloadUrl,
+      },
+    });
+
+    let savedResource;
+    if (existing) {
+      // Update existing resource
+      savedResource = await prisma.resource.update({
+        where: { id: existing.id },
+        data: {
+          title: resource.title,
+          thumbnail: resource.thumbnail,
+          year: resource.year,
+          subject: resource.subject,
+          curriculumCode: resource.curriculumCode,
+          topic: resource.topic,
+          description: resource.description,
+          lastUpdated: new Date(),
+        },
+      });
+    } else {
+      // Create new resource
+      savedResource = await prisma.resource.create({
+        data: {
+          title: resource.title,
+          fileName: resource.fileName,
+          downloadUrl: resource.downloadUrl,
+          thumbnail: resource.thumbnail,
+          year: resource.year,
+          subject: resource.subject,
+          curriculumCode: resource.curriculumCode,
+          topic: resource.topic,
+          description: resource.description,
+          // authorId: can be added when auth is implemented
+        },
+      });
+    }
+
+    // Convert to Resource type
+    const formattedResource = {
+      id: savedResource.id,
+      title: savedResource.title,
+      fileName: savedResource.fileName,
+      downloadUrl: savedResource.downloadUrl,
+      thumbnail: savedResource.thumbnail || "/placeholder.svg",
+      year: savedResource.year,
+      subject: savedResource.subject,
+      curriculumCode: savedResource.curriculumCode,
+      topic: savedResource.topic,
+      description: savedResource.description || "",
+      lastUpdated: savedResource.lastUpdated.toISOString(),
+    };
+
+    return NextResponse.json(formattedResource);
+  } catch (error) {
+    console.error("Error saving resource:", error);
+    return NextResponse.json(
+      { error: "Failed to save resource" },
       { status: 500 }
     );
   }

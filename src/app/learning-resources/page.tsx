@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Download } from "lucide-react";
-import { Resource, UploadedFile } from "@/lib/types";
+import { Resource as ResourceType, UploadedFile } from "@/lib/types";
 import { getUploadedResources } from "@/lib/resources";
 import { UploadResource } from "@/components/UploadResource";
 
@@ -36,28 +36,6 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const saveToLocalStorage = (resources: Resource[]) => {
-  try {
-    console.log("Saving to localStorage:", resources);
-    localStorage.setItem("resources", JSON.stringify(resources));
-  } catch (error) {
-    console.error("Error saving to localStorage:", error);
-  }
-};
-
-const getFromLocalStorage = (): Resource[] => {
-  try {
-    if (typeof window === "undefined") return [];
-    const saved = localStorage.getItem("resources");
-    const parsed = saved ? JSON.parse(saved) : [];
-    console.log("Retrieved from localStorage:", parsed);
-    return parsed;
-  } catch (error) {
-    console.error("Error reading from localStorage:", error);
-    return [];
-  }
-};
-
 export default function LearningResources() {
   const [selectedResources, setSelectedResources] = useState<Set<string>>(
     new Set()
@@ -65,49 +43,29 @@ export default function LearningResources() {
   const [yearFilter, setYearFilter] = useState<string>("");
   const [subjectFilter, setSubjectFilter] = useState<string>("");
   const [uploadedResourcesFormatted, setUploadedResourcesFormatted] = useState<
-    Resource[]
+    ResourceType[]
   >([]);
 
-  // Load localStorage data on mount
-  useEffect(() => {
-    const localData = getFromLocalStorage();
-    setUploadedResourcesFormatted(localData);
-  }, []);
-
-  // Separate useEffect for API data
+  // Fetch resources from API
   useEffect(() => {
     const fetchResources = async () => {
       try {
-        // Get API resources
-        const uploadedResources = await getUploadedResources();
-        console.log("API resources:", uploadedResources);
+        const [apiResources, uploadedResources] = await Promise.all([
+          fetch("/api/resources").then((res) => res.json()),
+          getUploadedResources(),
+        ]);
 
-        // Get localStorage resources
-        const localResources = getFromLocalStorage();
+        console.log("API resources:", apiResources);
+        console.log("Uploaded resources:", uploadedResources);
 
-        // Create a map of existing resources by fileName AND path for more accurate matching
-        const existingResourcesMap = new Map(
-          localResources.map((resource) => [
-            `${resource.fileName}-${resource.downloadUrl}`,
-            resource,
-          ])
+        // Process new uploads that aren't in the API resources
+        const existingFileNames = new Set(
+          apiResources.map((r: ResourceType) => r.fileName)
         );
 
-        // Format new resources, preserving existing metadata if available
-        const formatted = uploadedResources.map((file: UploadedFile) => {
-          const existingKey = `${file.name}-${file.path}`;
-          const existing = existingResourcesMap.get(existingKey);
-
-          if (existing) {
-            // Keep ALL existing data, only update lastUpdated if needed
-            return {
-              ...existing,
-              lastUpdated: file.lastUpdated || existing.lastUpdated,
-            };
-          }
-
-          // For files not in localStorage, create new resource
-          return {
+        const newResources = uploadedResources
+          .filter((file: UploadedFile) => !existingFileNames.has(file.name))
+          .map((file: UploadedFile) => ({
             id: Date.now() + Math.floor(Math.random() * 1000),
             title: file.title || file.name,
             fileName: file.name,
@@ -119,26 +77,28 @@ export default function LearningResources() {
             topic: `Size: ${Math.round(file.size / 1024)}kb`,
             lastUpdated: file.lastUpdated,
             description: "",
-          };
-        });
+          }));
 
-        // Merge with any localStorage resources that might not be in API response
-        const allResources = [...formatted];
+        // Save new resources to API
+        await Promise.all(
+          newResources.map((resource: ResourceType) =>
+            fetch("/api/resources", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(resource),
+            })
+          )
+        );
 
-        // Update state and localStorage
-        console.log("Updating with merged resources:", allResources);
-        setUploadedResourcesFormatted(allResources);
-        saveToLocalStorage(allResources);
+        // Update state with all resources
+        setUploadedResourcesFormatted([...newResources, ...apiResources]);
       } catch (error) {
-        console.error("Error fetching resources:", error);
-        // On error, keep using localStorage data
-        const localData = getFromLocalStorage();
-        setUploadedResourcesFormatted(localData);
+        console.error("Error fetching/saving resources:", error);
       }
     };
 
     fetchResources();
-  }, []); // Run once on mount
+  }, []);
 
   const toggleResource = (id: string) => {
     const newSelected = new Set(selectedResources);
@@ -178,7 +138,7 @@ export default function LearningResources() {
     return true;
   });
 
-  const handleNewResource = (uploadedResource: {
+  const handleNewResource = async (uploadedResource: {
     id: string;
     name: string;
     size: number;
@@ -191,8 +151,7 @@ export default function LearningResources() {
   }) => {
     console.log("Handling new resource:", uploadedResource);
 
-    const resource: Resource = {
-      id: Date.now(),
+    const resource = {
       title: uploadedResource.title,
       fileName: uploadedResource.name,
       downloadUrl: uploadedResource.path,
@@ -201,17 +160,24 @@ export default function LearningResources() {
       subject: uploadedResource.subject || "Unknown",
       curriculumCode: "-",
       topic: `Size: ${Math.round(uploadedResource.size / 1024)}kb`,
-      lastUpdated: uploadedResource.lastUpdated,
       description: "",
+      lastUpdated: uploadedResource.lastUpdated,
     };
 
-    setUploadedResourcesFormatted((prev) => {
-      // Add new resource at the beginning of the array
-      const newResources = [resource, ...prev];
-      // Immediately save to localStorage
-      saveToLocalStorage(newResources);
-      return newResources;
-    });
+    try {
+      const response = await fetch("/api/resources", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(resource),
+      });
+
+      if (!response.ok) throw new Error("Failed to save resource");
+
+      const savedResource = await response.json();
+      setUploadedResourcesFormatted((prev) => [savedResource, ...prev]);
+    } catch (error) {
+      console.error("Error saving resource:", error);
+    }
   };
 
   return (
