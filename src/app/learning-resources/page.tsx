@@ -85,33 +85,36 @@ export default function LearningResources() {
         // Get localStorage resources
         const localResources = getFromLocalStorage();
 
-        // Create a map of existing resources by fileName for quick lookup
+        // Create a map of existing resources by fileName AND path for more accurate matching
         const existingResourcesMap = new Map(
-          localResources.map((resource) => [resource.fileName, resource])
+          localResources.map((resource) => [
+            `${resource.fileName}-${resource.downloadUrl}`,
+            resource,
+          ])
         );
 
         // Format new resources, preserving existing metadata if available
         const formatted = uploadedResources.map((file: UploadedFile) => {
-          const existing = existingResourcesMap.get(file.name);
+          const existingKey = `${file.name}-${file.path}`;
+          const existing = existingResourcesMap.get(existingKey);
 
           if (existing) {
-            // Preserve existing metadata but update lastUpdated and path
+            // Keep ALL existing data, only update lastUpdated if needed
             return {
               ...existing,
-              downloadUrl: file.path,
-              lastUpdated: file.lastUpdated,
+              lastUpdated: file.lastUpdated || existing.lastUpdated,
             };
           }
 
-          // Create new resource for files we haven't seen before
+          // For files not in localStorage, create new resource
           return {
             id: Date.now() + Math.floor(Math.random() * 1000),
             title: file.title || file.name,
             fileName: file.name,
             downloadUrl: file.path,
             thumbnail: file.imageUrl || "/placeholder.svg",
-            year: file.yearLevel || "Uploaded",
-            subject: file.subject || "Resource",
+            year: file.yearLevel || "Unknown",
+            subject: file.subject || "Unknown",
             curriculumCode: "-",
             topic: `Size: ${Math.round(file.size / 1024)}kb`,
             lastUpdated: file.lastUpdated,
@@ -119,12 +122,18 @@ export default function LearningResources() {
           };
         });
 
+        // Merge with any localStorage resources that might not be in API response
+        const allResources = [...formatted];
+
         // Update state and localStorage
-        console.log("Updating with merged resources:", formatted);
-        setUploadedResourcesFormatted(formatted);
-        saveToLocalStorage(formatted);
+        console.log("Updating with merged resources:", allResources);
+        setUploadedResourcesFormatted(allResources);
+        saveToLocalStorage(allResources);
       } catch (error) {
         console.error("Error fetching resources:", error);
+        // On error, keep using localStorage data
+        const localData = getFromLocalStorage();
+        setUploadedResourcesFormatted(localData);
       }
     };
 
@@ -188,8 +197,8 @@ export default function LearningResources() {
       fileName: uploadedResource.name,
       downloadUrl: uploadedResource.path,
       thumbnail: uploadedResource.imageUrl || "/placeholder.svg",
-      year: uploadedResource.yearLevel,
-      subject: uploadedResource.subject,
+      year: uploadedResource.yearLevel || "Unknown",
+      subject: uploadedResource.subject || "Unknown",
       curriculumCode: "-",
       topic: `Size: ${Math.round(uploadedResource.size / 1024)}kb`,
       lastUpdated: uploadedResource.lastUpdated,
@@ -197,8 +206,9 @@ export default function LearningResources() {
     };
 
     setUploadedResourcesFormatted((prev) => {
+      // Add new resource at the beginning of the array
       const newResources = [resource, ...prev];
-      console.log("Updating state with new resource:", newResources);
+      // Immediately save to localStorage
       saveToLocalStorage(newResources);
       return newResources;
     });
