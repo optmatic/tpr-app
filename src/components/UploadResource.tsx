@@ -119,14 +119,25 @@ export function UploadResource({ onUploadSuccess }: UploadResourceProps) {
         formData.append("image", selectedImage);
       }
 
+      console.log("Uploading resource with data:", {
+        title: resourceDetails.title,
+        yearLevel: resourceDetails.yearLevel,
+        subject: resourceDetails.subject,
+      });
+
       const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
 
-      if (!response.ok) throw new Error("Upload failed");
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Upload failed:", errorData);
+        throw new Error("Upload failed");
+      }
 
       const data = await response.json();
+      console.log("Upload successful, received data:", data);
 
       // Generate a unique ID using timestamp and random number
       const uniqueId = `${Date.now()}-${Math.random()
@@ -144,6 +155,8 @@ export function UploadResource({ onUploadSuccess }: UploadResourceProps) {
         path: data.path,
         imageUrl: data.imagePath || null,
       };
+
+      console.log("New resource object created:", newResource);
 
       setUploadedFile(newResource);
       if (onUploadSuccess) {

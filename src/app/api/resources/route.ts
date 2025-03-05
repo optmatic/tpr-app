@@ -5,37 +5,31 @@ import type { Prisma } from "@prisma/client";
 
 export async function GET() {
   try {
+    console.log("Fetching resources from database...");
     const resources = await prisma.resource.findMany({
       orderBy: {
         lastUpdated: "desc",
       },
     });
 
-    if (!resources) {
-      console.log("No resources found");
-      return NextResponse.json([]);
-    }
+    console.log(`Found ${resources.length} resources in database`);
 
-    console.log(`Found ${resources.length} resources`);
-
-    // Convert the Prisma Resource to our Resource type
-    const formattedResources = resources.map((dbResource: Prisma.Resource) => ({
-      id: dbResource.id,
-      title: dbResource.title,
-      fileName: dbResource.fileName,
-      downloadUrl: dbResource.downloadUrl,
-      thumbnail: dbResource.thumbnail || "/placeholder.svg",
-      year: dbResource.year,
-      subject: dbResource.subject,
-      curriculumCode: dbResource.curriculumCode,
-      topic: dbResource.topic,
-      description: dbResource.description || "",
-      lastUpdated: dbResource.lastUpdated.toISOString(),
+    // Map database resources to the expected format
+    const formattedResources = resources.map((resource) => ({
+      id: resource.id.toString(),
+      name: resource.title,
+      title: resource.title,
+      size: 0, // You might want to store file size in the database
+      lastUpdated: resource.lastUpdated.toISOString(),
+      yearLevel: resource.year,
+      subject: resource.subject,
+      imageUrl: resource.thumbnail || null,
+      path: resource.downloadUrl,
     }));
 
     return NextResponse.json(formattedResources);
   } catch (error) {
-    console.error("Error in GET /api/resources:", error);
+    console.error("Error fetching resources:", error);
     return NextResponse.json(
       { error: "Failed to fetch resources" },
       { status: 500 }

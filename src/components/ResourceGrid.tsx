@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ResourceInfo } from "@/lib/types";
 import Image from "next/image";
@@ -16,26 +16,32 @@ export function ResourceGrid({ resources, setResources }: ResourceGridProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchResources = useCallback(async () => {
     setIsLoading(true);
-    fetch("/api/resources")
-      .then(async (res) => {
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || "Failed to fetch resources");
-        }
-        return res.json();
-      })
-      .then((data) => {
-        console.log("Fetched resources:", data);
-        setResources(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching resources:", error);
+    try {
+      const res = await fetch("/api/resources");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to fetch resources");
+      }
+      const data = await res.json();
+      console.log("Fetched resources:", data);
+      setResources(data);
+    } catch (error) {
+      console.error("Error fetching resources:", error);
+      if (error instanceof Error) {
         setError(error.message);
-      })
-      .finally(() => setIsLoading(false));
+      } else {
+        setError("An unknown error occurred");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   }, [setResources]);
+
+  useEffect(() => {
+    fetchResources();
+  }, [fetchResources]);
 
   if (isLoading) return <div>Loading resources...</div>;
   if (error) return <div>Error loading resources: {error}</div>;

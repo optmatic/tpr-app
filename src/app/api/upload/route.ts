@@ -1,57 +1,74 @@
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
-    const image = formData.get("image") as File;
     const title = formData.get("title") as string;
     const yearLevel = formData.get("yearLevel") as string;
     const subject = formData.get("subject") as string;
+    const image = formData.get("image") as File | null;
 
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    if (!file || !title || !yearLevel || !subject) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadDir = join(process.cwd(), "public/uploads");
-    const imageDir = join(process.cwd(), "public/uploads/images");
+    // Create directories if they don't exist
+    const uploadDir = join(process.cwd(), "public", "uploads");
     await mkdir(uploadDir, { recursive: true });
-    await mkdir(imageDir, { recursive: true });
 
-    // Save the main file
-    const fileBytes = await file.arrayBuffer();
-    const fileBuffer = Buffer.from(fileBytes);
-    const filePath = join(uploadDir, file.name);
-    await writeFile(filePath, fileBuffer);
+    // Save the file
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+    const filePath = join(uploadDir, fileName);
+    await writeFile(filePath, buffer);
+    const downloadUrl = `/uploads/${fileName}`;
 
-    // Handle the image if provided
+    // Save the image if provided
     let imagePath = null;
     if (image) {
       const imageBytes = await image.arrayBuffer();
       const imageBuffer = Buffer.from(imageBytes);
-      const imageFileName = `${Date.now()}-${image.name}`;
-      const fullImagePath = join(imageDir, imageFileName);
-      await writeFile(fullImagePath, imageBuffer);
-      imagePath = `/uploads/images/${imageFileName}`; // Use URL path, not filesystem path
+      const imageName = `${Date.now()}-${image.name.replace(/\s+/g, "-")}`;
+      const imageSavePath = join(uploadDir, imageName);
+      await writeFile(imageSavePath, imageBuffer);
+      imagePath = `/uploads/${imageName}`;
     }
 
+    // Save to database using Prisma
+    const resource = await prisma.resource.create({
+      data: {
+        title,
+        fileName: file.name,
+        downloadUrl,
+        thumbnail: imagePath,
+        year: yearLevel,
+        subject,
+        curriculumCode: "-", // Default value
+        topic: subject, // Using subject as topic for now
+        description: "", // Empty description
+      },
+    });
+
+    console.log("Resource saved to database:", resource);
+
     return NextResponse.json({
-      name: file.name,
-      path: `/uploads/${file.name}`,
-      imagePath: imagePath,
-      title,
-      yearLevel,
-      subject,
-      size: fileBuffer.length,
-      lastUpdated: new Date().toISOString(),
+      id: resource.id,
+      path: downloadUrl,
+      imagePath,
+      success: true,
     });
   } catch (error) {
-    console.error("Upload error:", error);
+    console.error("Error in upload API:", error);
     return NextResponse.json(
-      { error: "Error uploading file" },
+      { error: "Failed to upload file" },
       { status: 500 }
     );
   }
