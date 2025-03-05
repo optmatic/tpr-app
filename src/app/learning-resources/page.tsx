@@ -182,17 +182,23 @@ export default function LearningResources() {
 
   const archiveResource = async (id: string) => {
     try {
-      const response = await fetch(`/api/resources/${id}/archive`, {
+      // Convert id to string if it's not already
+      const resourceId = id.toString();
+
+      const response = await fetch(`/api/resources/${resourceId}/archive`, {
         method: "PATCH",
       });
 
       if (!response.ok) {
-        throw new Error("Failed to archive resource");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to archive resource");
       }
 
       // Remove the archived resource from the local state
       setUploadedResourcesFormatted((prevResources) =>
-        prevResources.filter((resource) => resource.id.toString() !== id)
+        prevResources.filter(
+          (resource) => resource.id.toString() !== resourceId
+        )
       );
     } catch (error) {
       console.error("Error archiving resource:", error);

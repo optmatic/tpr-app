@@ -47,7 +47,7 @@ export default function PretestListClient({
   const [view, setView] = useState<"list" | "edit" | "display">("list");
 
   const transformedPretests = initialPretests.map(transformToUIPretest);
-  const [pretests] = useState(
+  const [pretests, setPretests] = useState(
     transformedPretests.map((pretest) => ({
       id: String(pretest.id),
       title: pretest.title,
@@ -138,6 +138,29 @@ export default function PretestListClient({
     }
   }
 
+  // Add a function to handle archiving
+  const handleArchive = async (pretestId: string) => {
+    try {
+      const response = await fetch(`/api/pretests/${pretestId}/archive`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ archived: true }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to archive pretest: ${response.status}`);
+      }
+
+      // Refresh the page to show updated list
+      router.refresh();
+    } catch (error) {
+      console.error("Error archiving pretest:", error);
+      // Optionally show an error message to the user
+    }
+  };
+
   return (
     <main className="mx-auto p-4">
       <h1>Pretest List</h1>
@@ -171,7 +194,7 @@ export default function PretestListClient({
           pretests={pretests}
           onPretestSelect={handlePretestSelect}
           isLoading={false}
-          onArchivePretest={() => Promise.resolve()}
+          onArchivePretest={handleArchive}
           onEditPretest={(id: string) => {
             const pretest = initialPretests.find((p) => p.id === Number(id));
             if (pretest) {

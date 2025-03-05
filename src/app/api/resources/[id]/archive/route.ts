@@ -1,11 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function PATCH(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    // Make sure params.id exists
+    if (!params.id) {
+      return NextResponse.json(
+        { error: "Resource ID is required" },
+        { status: 400 }
+      );
+    }
+
     const id = parseInt(params.id);
 
     if (isNaN(id)) {
@@ -15,24 +23,21 @@ export async function PATCH(
       );
     }
 
-    // Instead of using isArchived, use a field that already exists
-    // For example, you could use the description field to mark it as archived
-    const resource = await prisma.resource.findUnique({
-      where: { id },
-      select: { description: true },
-    });
-
+    // For now, let's use a workaround since we don't have isArchived field yet
+    // We'll mark it as archived by updating a field that does exist
     const updatedResource = await prisma.resource.update({
       where: { id },
       data: {
-        description: resource?.description
-          ? `ARCHIVED: ${resource.description}`
-          : "ARCHIVED",
+        // Instead of isArchived: true, use an existing field
+        description:
+          "ARCHIVED: " +
+            (
+              await prisma.resource.findUnique({
+                where: { id },
+                select: { description: true },
+              })
+            )?.description || "",
       },
-    });
-
-    return NextResponse.json({
-      success: true,
     });
 
     return NextResponse.json({

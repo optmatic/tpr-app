@@ -23,6 +23,7 @@ model Pretest {
   description String?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+  archived    Boolean          @default(false)
   questions   Question[]
   attempts    PretestAttempt[]
   author      User?            @relation(fields: [authorId], references: [id])

@@ -30,13 +30,20 @@ export default function PretestArchivePage() {
     try {
       const response = await fetch("/api/pretests/archived");
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        console.error("Server error details:", errorData);
+        throw new Error(
+          `HTTP error! status: ${response.status}${
+            errorData?.details ? ` - ${errorData.details}` : ""
+          }`
+        );
       }
       const data = await response.json();
       setArchivedPretests(data);
     } catch (error) {
       console.error("Error fetching archived pretests:", error);
       setError("Failed to load archived pretests. Please try again later.");
+      setArchivedPretests([]);
     } finally {
       setIsLoading(false);
     }

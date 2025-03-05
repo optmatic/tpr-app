@@ -7,6 +7,9 @@ export default async function PretestListPage() {
   console.log("Fetching pretests...");
 
   const pretests = (await prisma.pretest.findMany({
+    where: {
+      archived: false, // Only fetch non-archived pretests
+    },
     include: {
       author: true,
       questions: {

@@ -27,50 +27,15 @@ type PretestData = {
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
-    const idParam = url.searchParams.get("id");
+    const showArchived = url.searchParams.get("showArchived") === "true";
 
-    // If ID is provided, return a specific pretest
-    if (idParam) {
-      const id = parseInt(idParam, 10);
-      if (isNaN(id)) {
-        return NextResponse.json(
-          { error: "Invalid pretest ID" },
-          { status: 400 }
-        );
-      }
+    // Filter out archived pretests by default
+    const whereClause = showArchived ? {} : { archived: false };
 
-      const pretest = await prisma.pretest.findUnique({
-        where: { id },
-        include: {
-          questions: {
-            include: {
-              answers: true,
-            },
-            orderBy: {
-              orderIndex: "asc",
-            },
-          },
-        },
-      });
-
-      if (!pretest) {
-        return NextResponse.json(
-          { error: "Pretest not found" },
-          { status: 404 }
-        );
-      }
-
-      return NextResponse.json(pretest);
-    }
-
-    // Otherwise return all pretests
     const pretests = await prisma.pretest.findMany({
+      where: whereClause,
       include: {
-        questions: {
-          select: {
-            id: true,
-          },
-        },
+        questions: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -79,7 +44,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(pretests);
   } catch (error) {
-    console.error("Failed to fetch pretests:", error);
+    console.error("Error fetching pretests:", error);
     return NextResponse.json(
       { error: "Failed to fetch pretests" },
       { status: 500 }

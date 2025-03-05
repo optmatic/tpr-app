@@ -1,16 +1,25 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Resource as ResourceType } from "@/lib/types";
 import type { Prisma } from "@prisma/client";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     // Get the URL to check for query parameters
     const url = new URL(request.url);
     const showArchived = url.searchParams.get("showArchived") === "true";
 
     // Build the where clause based on whether to show archived resources
-    const whereClause = showArchived ? {} : { isArchived: false };
+    // Since we don't have isArchived field yet, we'll filter by description
+    const whereClause = showArchived
+      ? {}
+      : {
+          NOT: {
+            description: {
+              startsWith: "ARCHIVED:",
+            },
+          },
+        };
 
     const resources = await prisma.resource.findMany({
       where: whereClause,
@@ -23,21 +32,17 @@ export async function GET(request: Request) {
 
     // Convert the Prisma Resource to our Resource type
     const formattedResources = resources.map((dbResource) => ({
-      id: dbResource.id.toString(),
-      name: dbResource.title,
+      id: dbResource.id,
       title: dbResource.title,
       fileName: dbResource.fileName,
       downloadUrl: dbResource.downloadUrl,
       thumbnail: dbResource.thumbnail || "/placeholder.svg",
-      imageUrl: dbResource.thumbnail || null,
       year: dbResource.year,
-      yearLevel: dbResource.year,
       subject: dbResource.subject,
       curriculumCode: dbResource.curriculumCode,
       topic: dbResource.topic,
       description: dbResource.description || "",
       lastUpdated: dbResource.lastUpdated.toISOString(),
-      size: 0, // You might want to store file size in the database
     }));
 
     return NextResponse.json(formattedResources);
