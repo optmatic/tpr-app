@@ -1,11 +1,12 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText } from "lucide-react";
+import { FileText, Archive } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ResourceInfo } from "@/lib/types";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
 interface ResourceGridProps {
   resources: ResourceInfo[];
@@ -19,11 +20,18 @@ export function ResourceGrid({ resources, setResources }: ResourceGridProps) {
   const fetchResources = useCallback(async () => {
     setIsLoading(true);
     try {
+      console.log("Fetching resources...");
       const res = await fetch("/api/resources");
+      console.log("Response status:", res.status, res.statusText);
+
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to fetch resources");
+        console.log("Response not OK, throwing error");
+        throw new Error(
+          `Failed to fetch resources: ${res.status} ${res.statusText}`
+        );
       }
+
+      console.log("Parsing response as JSON...");
       const data = await res.json();
       console.log("Fetched resources:", data);
       setResources(data);
@@ -43,6 +51,27 @@ export function ResourceGrid({ resources, setResources }: ResourceGridProps) {
     fetchResources();
   }, [fetchResources]);
 
+  // Function to archive a resource
+  const archiveResource = async (resourceId: string) => {
+    try {
+      const response = await fetch(`/api/resources/${resourceId}/archive`, {
+        method: "PATCH",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to archive resource");
+      }
+
+      // Remove the archived resource from the local state
+      setResources((prevResources) =>
+        prevResources.filter((resource) => resource.id !== resourceId)
+      );
+    } catch (error) {
+      console.error("Error archiving resource:", error);
+      alert("Failed to archive resource. Please try again.");
+    }
+  };
+
   if (isLoading) return <div>Loading resources...</div>;
   if (error) return <div>Error loading resources: {error}</div>;
   if (!resources.length) return <div>No resources found</div>;
@@ -52,8 +81,23 @@ export function ResourceGrid({ resources, setResources }: ResourceGridProps) {
       {resources.map((resource) => (
         <Card
           key={resource.id}
-          className="hover:bg-muted/50 transition-colors cursor-pointer"
+          className="hover:bg-muted/50 transition-colors cursor-pointer relative"
         >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (confirm("Are you sure you want to archive this resource?")) {
+                archiveResource(resource.id);
+              }
+            }}
+            title="Archive resource"
+          >
+            <Archive className="h-4 w-4" />
+          </Button>
+
           <CardContent className="p-4">
             {resource.imageUrl ? (
               <div className="relative h-32 w-full mb-4">
@@ -71,9 +115,17 @@ export function ResourceGrid({ resources, setResources }: ResourceGridProps) {
               <h3 className="font-medium truncate">{resource.name}</h3>
               <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary">
-                  Year Level: {resource.yearLevel}
+                  Year Level:{" "}
+                  <span className="capitalize ml-1 font-light">
+                    {resource.yearLevel}
+                  </span>
                 </Badge>
-                <Badge variant="outline">Subject: {resource.subject}</Badge>
+                <Badge variant="outline">
+                  Subject:{" "}
+                  <span className="capitalize ml-1 font-light">
+                    {resource.subject}
+                  </span>
+                </Badge>
               </div>
               <div className="flex justify-between items-center text-xs text-muted-foreground">
                 <span>Size: {Math.round(resource.size / 1024)} KB</span>

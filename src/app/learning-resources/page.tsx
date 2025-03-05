@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Download } from "lucide-react";
+import { Download, Archive } from "lucide-react";
 import { Resource as ResourceType, UploadedFile } from "@/lib/types";
 import { getUploadedResources } from "@/lib/resources";
 import { UploadResource } from "@/components/UploadResource";
@@ -180,6 +180,26 @@ export default function LearningResources() {
     }
   };
 
+  const archiveResource = async (id: string) => {
+    try {
+      const response = await fetch(`/api/resources/${id}/archive`, {
+        method: "PATCH",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to archive resource");
+      }
+
+      // Remove the archived resource from the local state
+      setUploadedResourcesFormatted((prevResources) =>
+        prevResources.filter((resource) => resource.id.toString() !== id)
+      );
+    } catch (error) {
+      console.error("Error archiving resource:", error);
+      alert("Failed to archive resource. Please try again.");
+    }
+  };
+
   return (
     <div className="container mx-auto p-4">
       <div className="mb-6 flex flex-col gap-4">
@@ -245,6 +265,26 @@ export default function LearningResources() {
                     className="h-5 w-5 border-2 border-white bg-white/90 transition-opacity group-hover:opacity-100 data-[state=checked]:bg-primary lg:opacity-0"
                   />
                 </div>
+                <div className="absolute right-3 top-3 z-10">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full bg-white/90 opacity-0 transition-opacity group-hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (
+                        confirm(
+                          "Are you sure you want to archive this resource?"
+                        )
+                      ) {
+                        archiveResource(resource.id.toString());
+                      }
+                    }}
+                    title="Archive resource"
+                  >
+                    <Archive className="h-4 w-4" />
+                  </Button>
+                </div>
                 <img
                   src={resource.thumbnail || "/placeholder.svg"}
                   alt={resource.title}
@@ -272,7 +312,7 @@ export default function LearningResources() {
         ))}
       </div>
 
-      <UploadResource onUploadSuccess={handleNewResource} />
+      {/* <UploadResource onUploadSuccess={handleNewResource} /> */}
     </div>
   );
 }

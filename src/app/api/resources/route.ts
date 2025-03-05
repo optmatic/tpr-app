@@ -3,33 +3,46 @@ import { prisma } from "@/lib/prisma";
 import { Resource as ResourceType } from "@/lib/types";
 import type { Prisma } from "@prisma/client";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    console.log("Fetching resources from database...");
+    // Get the URL to check for query parameters
+    const url = new URL(request.url);
+    const showArchived = url.searchParams.get("showArchived") === "true";
+
+    // Build the where clause based on whether to show archived resources
+    const whereClause = showArchived ? {} : { isArchived: false };
+
     const resources = await prisma.resource.findMany({
+      where: whereClause,
       orderBy: {
         lastUpdated: "desc",
       },
     });
 
-    console.log(`Found ${resources.length} resources in database`);
+    console.log(`Found ${resources.length} resources`);
 
-    // Map database resources to the expected format
-    const formattedResources = resources.map((resource) => ({
-      id: resource.id.toString(),
-      name: resource.title,
-      title: resource.title,
+    // Convert the Prisma Resource to our Resource type
+    const formattedResources = resources.map((dbResource) => ({
+      id: dbResource.id.toString(),
+      name: dbResource.title,
+      title: dbResource.title,
+      fileName: dbResource.fileName,
+      downloadUrl: dbResource.downloadUrl,
+      thumbnail: dbResource.thumbnail || "/placeholder.svg",
+      imageUrl: dbResource.thumbnail || null,
+      year: dbResource.year,
+      yearLevel: dbResource.year,
+      subject: dbResource.subject,
+      curriculumCode: dbResource.curriculumCode,
+      topic: dbResource.topic,
+      description: dbResource.description || "",
+      lastUpdated: dbResource.lastUpdated.toISOString(),
       size: 0, // You might want to store file size in the database
-      lastUpdated: resource.lastUpdated.toISOString(),
-      yearLevel: resource.year,
-      subject: resource.subject,
-      imageUrl: resource.thumbnail || null,
-      path: resource.downloadUrl,
     }));
 
     return NextResponse.json(formattedResources);
   } catch (error) {
-    console.error("Error fetching resources:", error);
+    console.error("Error in GET /api/resources:", error);
     return NextResponse.json(
       { error: "Failed to fetch resources" },
       { status: 500 }

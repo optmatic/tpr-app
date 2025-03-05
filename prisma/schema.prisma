@@ -85,6 +85,7 @@ model Resource {
   description    String?
   lastUpdated    DateTime @default(now())
   createdAt      DateTime @default(now())
+  isArchived     Boolean  @default(false)
   authorId       Int?
   author         User?    @relation(fields: [authorId], references: [id])
 }
