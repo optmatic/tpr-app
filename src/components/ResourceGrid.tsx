@@ -11,9 +11,14 @@ import { Button } from "@/components/ui/button";
 interface ResourceGridProps {
   resources: ResourceInfo[];
   setResources: React.Dispatch<React.SetStateAction<ResourceInfo[]>>;
+  isArchivePage?: boolean;
 }
 
-export function ResourceGrid({ resources, setResources }: ResourceGridProps) {
+export function ResourceGrid({
+  resources,
+  setResources,
+  isArchivePage = false,
+}: ResourceGridProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,8 +53,10 @@ export function ResourceGrid({ resources, setResources }: ResourceGridProps) {
   }, [setResources]);
 
   useEffect(() => {
-    fetchResources();
-  }, [fetchResources]);
+    if (!isArchivePage) {
+      fetchResources();
+    }
+  }, [fetchResources, isArchivePage]);
 
   // Function to archive a resource
   const archiveResource = async (resourceId: string) => {
@@ -72,31 +79,76 @@ export function ResourceGrid({ resources, setResources }: ResourceGridProps) {
     }
   };
 
-  if (isLoading) return <div>Loading resources...</div>;
-  if (error) return <div>Error loading resources: {error}</div>;
-  if (!resources.length) return <div>No resources found</div>;
+  // Function to restore an archived resource
+  const restoreResource = async (resourceId: string) => {
+    try {
+      const response = await fetch(`/api/resources/${resourceId}/restore`, {
+        method: "PATCH",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to restore resource");
+      }
+
+      // Remove the restored resource from the local state
+      setResources((prevResources) =>
+        prevResources.filter((resource) => resource.id !== resourceId)
+      );
+    } catch (error) {
+      console.error("Error restoring resource:", error);
+      alert("Failed to restore resource. Please try again.");
+    }
+  };
+
+  if (isArchivePage && resources.length === 0) return null; // Let the parent handle empty state
+  if (!isArchivePage) {
+    if (isLoading) return <div>Loading resources...</div>;
+    if (error) return <div>Error loading resources: {error}</div>;
+    if (!resources.length) return <div>No resources found</div>;
+  }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {resources.map((resource) => (
         <Card
           key={resource.id}
-          className="hover:bg-muted/50 transition-colors cursor-pointer relative"
+          className="group hover:bg-muted/50 transition-colors cursor-pointer relative"
         >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (confirm("Are you sure you want to archive this resource?")) {
-                archiveResource(resource.id);
-              }
-            }}
-            title="Archive resource"
-          >
-            <Archive className="h-4 w-4" />
-          </Button>
+          {isArchivePage ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (
+                  confirm("Are you sure you want to restore this resource?")
+                ) {
+                  restoreResource(resource.id);
+                }
+              }}
+              title="Restore resource"
+            >
+              <FileText className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (
+                  confirm("Are you sure you want to archive this resource?")
+                ) {
+                  archiveResource(resource.id);
+                }
+              }}
+              title="Archive resource"
+            >
+              <Archive className="h-4 w-4" />
+            </Button>
+          )}
 
           <CardContent className="p-4">
             {resource.imageUrl ? (
@@ -105,7 +157,7 @@ export function ResourceGrid({ resources, setResources }: ResourceGridProps) {
                   src={resource.imageUrl}
                   alt={resource.name}
                   fill
-                  className="object-contain"
+                  className="object-cover rounded-sm"
                 />
               </div>
             ) : (
@@ -114,21 +166,22 @@ export function ResourceGrid({ resources, setResources }: ResourceGridProps) {
             <div className="space-y-2">
               <h3 className="font-medium truncate">{resource.name}</h3>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">
-                  Year Level:{" "}
-                  <span className="capitalize ml-1 font-light">
+                <Badge variant="outline" className="text-xs">
+                  <span className="capitalize font-light">
                     {resource.yearLevel}
                   </span>
                 </Badge>
-                <Badge variant="outline">
-                  Subject:{" "}
-                  <span className="capitalize ml-1 font-light">
+                <Badge variant="secondary" className="text-xs">
+                  <span className="capitalize font-light">
                     {resource.subject}
                   </span>
                 </Badge>
+                <Badge variant="outline" className="text-xs">
+                  -
+                </Badge>
               </div>
               <div className="flex justify-between items-center text-xs text-muted-foreground">
-                <span>Size: {Math.round(resource.size / 1024)} KB</span>
+                <span>Size: NaNkb</span>
                 <span>
                   Last updated:{" "}
                   {new Date(resource.lastUpdated).toLocaleDateString()}

@@ -7,6 +7,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = params;
+
     const { archived } = await request.json();
 
     const updatedPretest = await prisma.pretest.update({

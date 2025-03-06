@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -182,7 +182,6 @@ export default function LearningResources() {
 
   const archiveResource = async (id: string) => {
     try {
-      // Convert id to string if it's not already
       const resourceId = id.toString();
 
       const response = await fetch(`/api/resources/${resourceId}/archive`, {

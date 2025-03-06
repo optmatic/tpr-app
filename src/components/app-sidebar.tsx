@@ -77,14 +77,9 @@ const data = {
           icon: ListCheck,
         },
         {
-          name: "Pretest Archive",
-          url: "/pretest-archive",
-          icon: Archive,
-        },
-        {
-          name: "Upload Resource",
-          url: "/upload-resource",
-          icon: Upload,
+          name: "Student Results",
+          url: "/student-results",
+          icon: NotebookPen,
         },
         {
           name: "Learning Resources",
@@ -92,9 +87,20 @@ const data = {
           icon: BookOpen,
         },
         {
-          name: "Student Results",
-          url: "/student-results",
-          icon: NotebookPen,
+          name: "Upload Resource",
+          url: "/upload-resource",
+          icon: Upload,
+        },
+        {
+          name: "Pretest Archive",
+          url: "/pretest-archive",
+          icon: Archive,
+        },
+
+        {
+          name: "Resource Archive",
+          url: "/resource-archive",
+          icon: Archive,
         },
       ],
     },
