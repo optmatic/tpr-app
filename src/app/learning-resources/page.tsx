@@ -127,14 +127,34 @@ export default function LearningResources() {
   };
 
   const filteredResources = uploadedResourcesFormatted.filter((resource) => {
-    if (yearFilter && yearFilter !== "all" && resource.year !== yearFilter)
-      return false;
-    if (
-      subjectFilter &&
-      subjectFilter !== "all" &&
-      resource.subject !== subjectFilter
-    )
-      return false;
+    // Case-insensitive comparison for year filter
+    if (yearFilter && yearFilter !== "all") {
+      const resourceYear = resource.year.toLowerCase();
+      const filterYear = yearFilter.toLowerCase();
+
+      // Check if the resource year contains the filter value or vice versa
+      if (
+        !resourceYear.includes(filterYear) &&
+        !filterYear.includes(resourceYear)
+      ) {
+        return false;
+      }
+    }
+
+    // Case-insensitive comparison for subject filter
+    if (subjectFilter && subjectFilter !== "all") {
+      const resourceSubject = resource.subject.toLowerCase();
+      const filterSubject = subjectFilter.toLowerCase();
+
+      // Check if the resource subject contains the filter value or vice versa
+      if (
+        !resourceSubject.includes(filterSubject) &&
+        !filterSubject.includes(resourceSubject)
+      ) {
+        return false;
+      }
+    }
+
     return true;
   });
 
