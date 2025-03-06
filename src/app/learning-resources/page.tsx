@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -50,18 +50,32 @@ export default function LearningResources() {
   useEffect(() => {
     const fetchResources = async () => {
       try {
+        console.log("Starting resource fetch...");
         const [apiResources, uploadedResources] = await Promise.all([
           fetch("/api/resources").then((res) => res.json()),
           getUploadedResources(),
         ]);
 
-        console.log("API resources:", apiResources);
-        console.log("Uploaded resources:", uploadedResources);
+        console.log("API resources (raw):", apiResources);
+        console.log("Uploaded resources (raw):", uploadedResources);
+
+        // Check for duplicates in API resources
+        const resourceIds = new Set<number | string>();
+        const duplicateIds: (number | string)[] = [];
+        apiResources.forEach((resource: ResourceType) => {
+          if (resourceIds.has(resource.id)) {
+            duplicateIds.push(resource.id);
+          } else {
+            resourceIds.add(resource.id);
+          }
+        });
+        console.log("Duplicate IDs in API resources:", duplicateIds);
 
         // Process new uploads that aren't in the API resources
         const existingFileNames = new Set(
           apiResources.map((r: ResourceType) => r.fileName)
         );
+        console.log("Existing file names:", Array.from(existingFileNames));
 
         const newResources = uploadedResources
           .filter((file: UploadedFile) => !existingFileNames.has(file.name))
@@ -79,19 +93,120 @@ export default function LearningResources() {
             description: "",
           }));
 
+        console.log("New resources to be added:", newResources);
+
         // Save new resources to API
-        await Promise.all(
-          newResources.map((resource: ResourceType) =>
-            fetch("/api/resources", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(resource),
-            })
+        if (newResources.length > 0) {
+          console.log("Saving new resources to API...");
+          await Promise.all(
+            newResources.map((resource: ResourceType) =>
+              fetch("/api/resources", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(resource),
+              })
+            )
+          );
+        }
+
+        // Check for resources with missing or inconsistent data
+        const problematicResources = [...newResources, ...apiResources].filter(
+          (resource) => {
+            return (
+              !resource.year ||
+              !resource.subject ||
+              resource.year === "Unknown" ||
+              resource.subject === "Unknown" ||
+              !resource.thumbnail
+            );
+          }
+        );
+        console.log(
+          "Resources with missing/inconsistent data:",
+          problematicResources
+        );
+
+        // Filter out local-only resources that don't have proper database fields
+        const validResources = [...newResources, ...apiResources].filter(
+          (resource) => {
+            // Check if this is a properly saved database resource
+            const isValidResource =
+              resource.fileName &&
+              resource.downloadUrl &&
+              (typeof resource.id === "number" || !isNaN(Number(resource.id)));
+
+            if (!isValidResource) {
+              console.log(`Filtering out invalid resource:`, resource);
+            }
+
+            return isValidResource;
+          }
+        );
+
+        console.log(
+          `Filtered out ${
+            [...newResources, ...apiResources].length - validResources.length
+          } invalid resources`
+        );
+        console.log("Valid resources count:", validResources.length);
+
+        // Normalize the remaining valid resources
+        const normalizedResources = validResources.map((resource) => {
+          // Normalize year level
+          let normalizedYear = resource.year || "Unknown";
+          if (normalizedYear.toLowerCase() === "unknown") {
+            normalizedYear = "Unknown";
+          } else if (normalizedYear.toLowerCase() === "foundation") {
+            normalizedYear = "Foundation";
+          }
+
+          // Normalize subject
+          let normalizedSubject = resource.subject || "Unknown";
+          if (normalizedSubject.toLowerCase() === "mathematics") {
+            normalizedSubject = "Mathematics";
+          }
+
+          return {
+            ...resource,
+            year: normalizedYear,
+            subject: normalizedSubject,
+            // Ensure thumbnail is always a valid URL
+            thumbnail: resource.thumbnail || "/placeholder.svg",
+            // Ensure curriculum code is consistent
+            curriculumCode: resource.curriculumCode || "-",
+          };
+        });
+
+        console.log("Normalized resources:", normalizedResources);
+        setUploadedResourcesFormatted(normalizedResources);
+
+        // After fetching resources
+        console.log(
+          "Resources with name 'LR1':",
+          [...newResources, ...apiResources].filter(
+            (r) => r.title === "LR1" || r.fileName === "LR1"
           )
         );
 
-        // Update state with all resources
-        setUploadedResourcesFormatted([...newResources, ...apiResources]);
+        // Check for resources with foundation/unknown year level
+        console.log(
+          "Resources with foundation/unknown year:",
+          [...newResources, ...apiResources].filter(
+            (r) =>
+              r.year?.toLowerCase() === "foundation" ||
+              r.year?.toLowerCase() === "unknown"
+          )
+        );
+
+        // Check for resources with different image handling
+        console.log(
+          "Resources with different image paths:",
+          [...newResources, ...apiResources].map((r) => ({
+            id: r.id,
+            title: r.title,
+            thumbnail: r.thumbnail,
+          }))
+        );
       } catch (error) {
         console.error("Error fetching/saving resources:", error);
       }
@@ -127,9 +242,17 @@ export default function LearningResources() {
   };
 
   const filteredResources = uploadedResourcesFormatted.filter((resource) => {
+    console.log("Filtering resource:", {
+      id: resource.id,
+      year: resource.year,
+      subject: resource.subject,
+      yearFilter,
+      subjectFilter,
+    });
+
     // Case-insensitive comparison for year filter
     if (yearFilter && yearFilter !== "all") {
-      const resourceYear = resource.year.toLowerCase();
+      const resourceYear = (resource.year || "").toLowerCase();
       const filterYear = yearFilter.toLowerCase();
 
       // Check if the resource year contains the filter value or vice versa
@@ -137,13 +260,14 @@ export default function LearningResources() {
         !resourceYear.includes(filterYear) &&
         !filterYear.includes(resourceYear)
       ) {
+        console.log(`Resource ${resource.id} filtered out by year`);
         return false;
       }
     }
 
     // Case-insensitive comparison for subject filter
     if (subjectFilter && subjectFilter !== "all") {
-      const resourceSubject = resource.subject.toLowerCase();
+      const resourceSubject = (resource.subject || "").toLowerCase();
       const filterSubject = subjectFilter.toLowerCase();
 
       // Check if the resource subject contains the filter value or vice versa
@@ -151,12 +275,15 @@ export default function LearningResources() {
         !resourceSubject.includes(filterSubject) &&
         !filterSubject.includes(resourceSubject)
       ) {
+        console.log(`Resource ${resource.id} filtered out by subject`);
         return false;
       }
     }
 
     return true;
   });
+
+  console.log("Filtered resources count:", filteredResources.length);
 
   const handleNewResource = async (uploadedResource: {
     id: string;
@@ -203,13 +330,17 @@ export default function LearningResources() {
   const archiveResource = async (id: string) => {
     try {
       const resourceId = id.toString();
+      console.log(`Attempting to archive resource with ID: ${resourceId}`);
 
       const response = await fetch(`/api/resources/${resourceId}/archive`, {
         method: "PATCH",
       });
 
+      console.log(`Archive API response status: ${response.status}`);
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Archive API error response:", errorData);
         throw new Error(errorData.error || "Failed to archive resource");
       }
 
@@ -219,11 +350,23 @@ export default function LearningResources() {
           (resource) => resource.id.toString() !== resourceId
         )
       );
+
+      console.log(`Successfully archived resource with ID: ${resourceId}`);
     } catch (error) {
       console.error("Error archiving resource:", error);
       alert("Failed to archive resource. Please try again.");
     }
   };
+
+  console.log(
+    "Rendering resources:",
+    filteredResources.map((r) => ({
+      id: r.id,
+      title: r.title,
+      year: r.year,
+      subject: r.subject,
+    }))
+  );
 
   return (
     <div className="container mx-auto p-4">
