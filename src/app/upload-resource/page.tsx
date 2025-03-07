@@ -3,7 +3,7 @@
 import { UploadResource } from "@/components/UploadResource";
 import { ResourceGrid } from "@/components/ResourceGrid";
 import { ResourceInfo } from "@/lib/types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function ResourcesPage() {
   const [resources, setResources] = useState<ResourceInfo[]>([]);
@@ -11,7 +11,24 @@ export default function ResourcesPage() {
 
   const handleUploadSuccess = (newResource: ResourceInfo) => {
     setResources((prev) => [newResource, ...prev]);
+    fetchResources();
   };
+
+  const fetchResources = async () => {
+    try {
+      const res = await fetch("/api/resources");
+      if (res.ok) {
+        const data = await res.json();
+        setResources(data);
+      }
+    } catch (error) {
+      console.error("Error fetching resources:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchResources();
+  }, []);
 
   return (
     <div className="space-y-8">

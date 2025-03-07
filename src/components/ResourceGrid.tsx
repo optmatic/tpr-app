@@ -110,88 +110,97 @@ export function ResourceGrid({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {resources.map((resource) => (
-        <Card
-          key={resource.id}
-          className="group hover:bg-muted/50 transition-colors cursor-pointer relative"
-        >
-          {isArchivePage ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (
-                  confirm("Are you sure you want to restore this resource?")
-                ) {
-                  restoreResource(resource.id);
-                }
-              }}
-              title="Restore resource"
-            >
-              <FileText className="h-4 w-4" />
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (
-                  confirm("Are you sure you want to archive this resource?")
-                ) {
-                  archiveResource(resource.id);
-                }
-              }}
-              title="Archive resource"
-            >
-              <Archive className="h-4 w-4" />
-            </Button>
-          )}
+      {resources.map((resource) => {
+        console.log("Resource data:", resource);
+        console.log("Resource size:", resource.size);
 
-          <CardContent className="p-4">
-            {resource.imageUrl ? (
-              <div className="relative h-32 w-full mb-4">
-                <Image
-                  src={resource.imageUrl}
-                  alt={resource.name}
-                  fill
-                  className="object-cover rounded-sm"
-                />
-              </div>
+        return (
+          <Card
+            key={resource.id}
+            className="group hover:bg-muted/50 transition-colors cursor-pointer relative"
+          >
+            {isArchivePage ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (
+                    confirm("Are you sure you want to restore this resource?")
+                  ) {
+                    restoreResource(resource.id);
+                  }
+                }}
+                title="Restore resource"
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
             ) : (
-              <FileText className="h-32 w-full text-muted-foreground" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (
+                    confirm("Are you sure you want to archive this resource?")
+                  ) {
+                    archiveResource(resource.id);
+                  }
+                }}
+                title="Archive resource"
+              >
+                <Archive className="h-4 w-4" />
+              </Button>
             )}
-            <div className="space-y-2">
-              <h3 className="font-medium truncate">{resource.name}</h3>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className="text-xs">
-                  <span className="capitalize font-light">
-                    {resource.yearLevel}
+
+            <CardContent className="p-4">
+              {resource.imageUrl ? (
+                <div className="relative h-32 w-full mb-4">
+                  <Image
+                    src={resource.imageUrl}
+                    alt={resource.name}
+                    fill
+                    className="object-cover rounded-sm"
+                  />
+                </div>
+              ) : (
+                <FileText className="h-32 w-full text-muted-foreground" />
+              )}
+              <div className="space-y-2">
+                <h3 className="font-medium truncate">{resource.name}</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline" className="text-xs">
+                    <span className="capitalize font-light">
+                      {resource.yearLevel}
+                    </span>
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    <span className="capitalize font-light">
+                      {resource.subject}
+                    </span>
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    -
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center text-xs text-muted-foreground">
+                  <span>
+                    {resource.size > 0
+                      ? `Size: ${resource.size}kb`
+                      : "Size: Unknown"}
                   </span>
-                </Badge>
-                <Badge variant="secondary" className="text-xs">
-                  <span className="capitalize font-light">
-                    {resource.subject}
+                  <span>
+                    Last updated:{" "}
+                    {new Date(resource.lastUpdated).toLocaleDateString()}
                   </span>
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  -
-                </Badge>
+                </div>
               </div>
-              <div className="flex justify-between items-center text-xs text-muted-foreground">
-                <span>Size: NaNkb</span>
-                <span>
-                  Last updated:{" "}
-                  {new Date(resource.lastUpdated).toLocaleDateString()}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }
