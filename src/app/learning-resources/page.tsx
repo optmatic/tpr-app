@@ -59,76 +59,52 @@ export default function LearningResources() {
         console.log("API resources (raw):", apiResources);
         console.log("Uploaded resources (raw):", uploadedResources);
 
-        // Check for duplicates in API resources
-        const resourceIds = new Set<number | string>();
-        const duplicateIds: (number | string)[] = [];
+        // First, deduplicate resources by title and content
+        const uniqueResourceMap = new Map<string, ResourceType>();
+
+        // Process API resources first (they should take precedence)
         apiResources.forEach((resource: ResourceType) => {
-          if (resourceIds.has(resource.id)) {
-            duplicateIds.push(resource.id);
-          } else {
-            resourceIds.add(resource.id);
-          }
+          const key = `${resource.title}-${resource.fileName}`;
+          uniqueResourceMap.set(key, resource);
         });
-        console.log("Duplicate IDs in API resources:", duplicateIds);
 
-        // Process new uploads that aren't in the API resources
-        const existingFileNames = new Set(
-          apiResources.map((r: ResourceType) => r.fileName)
+        // Then process new uploads, only adding those not already in the map
+        uploadedResources
+          .filter((file: UploadedFile) => {
+            const key = `${file.title || file.name}-${file.name}`;
+            return !uniqueResourceMap.has(key);
+          })
+          .forEach((file: UploadedFile) => {
+            const key = `${file.title || file.name}-${file.name}`;
+            const newResource: ResourceType = {
+              id: Date.now() + Math.floor(Math.random() * 1000),
+              title: file.title || file.name,
+              fileName: file.name,
+              downloadUrl: file.path,
+              thumbnail: file.imageUrl || "/placeholder.svg",
+              year: file.yearLevel || "Unknown",
+              subject: file.subject || "Unknown",
+              curriculumCode: "-",
+              topic: `Size: ${Math.round(file.size / 1024)}kb`,
+              lastUpdated: file.lastUpdated,
+              description: "",
+            };
+            uniqueResourceMap.set(key, newResource);
+          });
+
+        // Get the deduplicated resources
+        const deduplicatedResources: ResourceType[] = Array.from(
+          uniqueResourceMap.values()
         );
-        console.log("Existing file names:", Array.from(existingFileNames));
 
-        const newResources = uploadedResources
-          .filter((file: UploadedFile) => !existingFileNames.has(file.name))
-          .map((file: UploadedFile) => ({
-            id: Date.now() + Math.floor(Math.random() * 1000),
-            title: file.title || file.name,
-            fileName: file.name,
-            downloadUrl: file.path,
-            thumbnail: file.imageUrl || "/placeholder.svg",
-            year: file.yearLevel || "Unknown",
-            subject: file.subject || "Unknown",
-            curriculumCode: "-",
-            topic: `Size: ${Math.round(file.size / 1024)}kb`,
-            lastUpdated: file.lastUpdated,
-            description: "",
-          }));
-
-        console.log("New resources to be added:", newResources);
-
-        // Save new resources to API
-        if (newResources.length > 0) {
-          console.log("Saving new resources to API...");
-          await Promise.all(
-            newResources.map((resource: ResourceType) =>
-              fetch("/api/resources", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(resource),
-              })
-            )
-          );
-        }
-
-        // Check for resources with missing or inconsistent data
-        const problematicResources = [...newResources, ...apiResources].filter(
-          (resource) => {
-            return (
-              !resource.year ||
-              !resource.subject ||
-              resource.year === "Unknown" ||
-              resource.subject === "Unknown" ||
-              !resource.thumbnail
-            );
-          }
-        );
         console.log(
-          "Resources with missing/inconsistent data:",
-          problematicResources
+          "Deduplicated resources count:",
+          deduplicatedResources.length
         );
 
-        // Filter out local-only resources that don't have proper database fields
-        const validResources = [...newResources, ...apiResources].filter(
-          (resource) => {
+        // Now filter out invalid resources
+        const validResources: ResourceType[] = deduplicatedResources.filter(
+          (resource: ResourceType) => {
             // Check if this is a properly saved database resource
             const isValidResource =
               resource.fileName &&
@@ -143,47 +119,44 @@ export default function LearningResources() {
           }
         );
 
-        console.log(
-          `Filtered out ${
-            [...newResources, ...apiResources].length - validResources.length
-          } invalid resources`
-        );
-        console.log("Valid resources count:", validResources.length);
-
         // Normalize the remaining valid resources
-        const normalizedResources = validResources.map((resource) => {
-          // Normalize year level
-          let normalizedYear = resource.year || "Unknown";
-          if (normalizedYear.toLowerCase() === "unknown") {
-            normalizedYear = "Unknown";
-          } else if (normalizedYear.toLowerCase() === "foundation") {
-            normalizedYear = "Foundation";
+        const normalizedResources: ResourceType[] = validResources.map(
+          (resource: ResourceType) => {
+            // Normalize year level
+            let normalizedYear = resource.year || "Unknown";
+            if (normalizedYear.toLowerCase() === "unknown") {
+              normalizedYear = "Unknown";
+            } else if (normalizedYear.toLowerCase() === "foundation") {
+              normalizedYear = "Foundation";
+            }
+
+            // Normalize subject
+            let normalizedSubject = resource.subject || "Unknown";
+            if (normalizedSubject.toLowerCase() === "mathematics") {
+              normalizedSubject = "Mathematics";
+            } else if (normalizedSubject.toLowerCase() === "geography") {
+              normalizedSubject = "Geography";
+            }
+
+            return {
+              ...resource,
+              year: normalizedYear,
+              subject: normalizedSubject,
+              thumbnail: resource.thumbnail || "/placeholder.svg",
+              curriculumCode: resource.curriculumCode || "-",
+              // Ensure topic is properly formatted
+              topic: resource.topic || `Size: NaNkb`,
+            };
           }
+        );
 
-          // Normalize subject
-          let normalizedSubject = resource.subject || "Unknown";
-          if (normalizedSubject.toLowerCase() === "mathematics") {
-            normalizedSubject = "Mathematics";
-          }
-
-          return {
-            ...resource,
-            year: normalizedYear,
-            subject: normalizedSubject,
-            // Ensure thumbnail is always a valid URL
-            thumbnail: resource.thumbnail || "/placeholder.svg",
-            // Ensure curriculum code is consistent
-            curriculumCode: resource.curriculumCode || "-",
-          };
-        });
-
-        console.log("Normalized resources:", normalizedResources);
+        console.log("Final normalized resources:", normalizedResources);
         setUploadedResourcesFormatted(normalizedResources);
 
         // After fetching resources
         console.log(
           "Resources with name 'LR1':",
-          [...newResources, ...apiResources].filter(
+          [...deduplicatedResources, ...apiResources].filter(
             (r) => r.title === "LR1" || r.fileName === "LR1"
           )
         );
@@ -191,7 +164,7 @@ export default function LearningResources() {
         // Check for resources with foundation/unknown year level
         console.log(
           "Resources with foundation/unknown year:",
-          [...newResources, ...apiResources].filter(
+          [...deduplicatedResources, ...apiResources].filter(
             (r) =>
               r.year?.toLowerCase() === "foundation" ||
               r.year?.toLowerCase() === "unknown"
@@ -201,7 +174,7 @@ export default function LearningResources() {
         // Check for resources with different image handling
         console.log(
           "Resources with different image paths:",
-          [...newResources, ...apiResources].map((r) => ({
+          [...deduplicatedResources, ...apiResources].map((r) => ({
             id: r.id,
             title: r.title,
             thumbnail: r.thumbnail,
@@ -297,6 +270,18 @@ export default function LearningResources() {
     path: string;
   }) => {
     console.log("Handling new resource:", uploadedResource);
+
+    // Check if this resource already exists
+    const isDuplicate = uploadedResourcesFormatted.some(
+      (r) =>
+        r.fileName === uploadedResource.name ||
+        r.title === uploadedResource.title
+    );
+
+    if (isDuplicate) {
+      console.log("Resource already exists, skipping upload");
+      return;
+    }
 
     const resource = {
       title: uploadedResource.title,
