@@ -26,7 +26,8 @@ export function ResourceGrid({
     setIsLoading(true);
     try {
       console.log("Fetching resources...");
-      const res = await fetch("/api/resources");
+      const res = await fetch("/api/resources/[id]/archived");
+
       console.log("Response status:", res.status, res.statusText);
 
       if (!res.ok) {
